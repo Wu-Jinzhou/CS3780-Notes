@@ -1,0 +1,81 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{enumitem}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{hyperref}
+\usepackage{color}
+\usepackage{tcolorbox}
+\usepackage{amsthm}
+\usepackage{caption}
+\usepackage{graphicx}
+
+\theoremstyle{definition}
+\newtheorem*{definition}{Definition}
+
+\theoremstyle{remark}
+\newtheorem*{remark}{Remark}
+
+\theoremstyle{plain}
+\newtheorem*{theorem}{Theorem}
+
+\newtheoremstyle{solutionstyle} % Define a custom style
+  {6pt}   % Space above
+  {6pt}   % Space below
+  {}      % Body font
+  {0pt}      % Indent amount
+  {\bfseries} % Theorem head font (bold)
+  {.}     % Punctuation after theorem head
+  {0.3em}   % Space after theorem head
+  {}      % Theorem head specification
+
+\theoremstyle{solutionstyle}
+\newtheorem*{solution}{Solution}
+
+\newtcolorbox{embox}{
+    % colback=red!5!white,
+    colframe=gray!75!black,
+    % fonttitle=\bfseries,
+    % title=Goal
+}
+
+\newtcolorbox{defbox}{
+    colback=red!5!white,
+    colframe=red!75!black,
+    fonttitle=\bfseries,
+    title=Definition
+}
+
+\newtcolorbox{algobox}{
+    colback=blue!5!white,
+    colframe=blue!75!black,
+    fonttitle=\bfseries,
+    title=Algorithm
+}
+
+\title{CS 3780 Notes}
+\author{Jinzhou Wu}
+\date{\today}
+
+\begin{document}
+
+\setcounter{tocdepth}{1}
+
+\maketitle
+
+\tableofcontents
+
+\newpage
+
+\include{Lectures/knn}
+
+\include{Lectures/trees}
+
+\include{Lectures/overfitting}
+
+\include{Lectures/modsel}
+
+\include{Lectures/linear}
+
+\end{document}

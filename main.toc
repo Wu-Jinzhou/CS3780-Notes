@@ -1,0 +1,36 @@
+\contentsline {section}{\numberline {1}Supervised Learning and KNN}{2}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Supervised Learning}{2}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}K-Nearest Neighbors (KNN)}{2}{subsection.1.2}%
+\contentsline {subsection}{\numberline {1.3}Weighted KNN}{3}{subsection.1.3}%
+\contentsline {subsection}{\numberline {1.4}Similarity Measures}{3}{subsection.1.4}%
+\contentsline {subsection}{\numberline {1.5}Types of Attributes}{4}{subsection.1.5}%
+\contentsline {subsection}{\numberline {1.6}Properties of KNN}{4}{subsection.1.6}%
+\contentsline {section}{\numberline {2}Inductive Learning and Decision Trees}{5}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Inductive Learning}{5}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Version Space}{5}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}List-Then-Eliminate Algorithm}{5}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.4}Decision Trees}{6}{subsection.2.4}%
+\contentsline {subsection}{\numberline {2.5}Top-Down Induction of Decision Trees (IDT)}{6}{subsection.2.5}%
+\contentsline {subsection}{\numberline {2.6}Choosing the Best Split}{6}{subsection.2.6}%
+\contentsline {subsection}{\numberline {2.7}Properties of Decision Trees}{7}{subsection.2.7}%
+\contentsline {section}{\numberline {3}Prediction and Overfitting}{8}{section.3}%
+\contentsline {subsection}{\numberline {3.1}D}{8}{subsection.3.1}%
+\contentsline {section}{\numberline {4}Model Selection and Assessment}{11}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Validation Sample}{11}{subsection.4.1}%
+\contentsline {paragraph}{Two Nested Learning Algorithms}{11}{section*.20}%
+\contentsline {paragraph}{Typical ML Experiment}{11}{section*.21}%
+\contentsline {subsection}{\numberline {4.2}Cross-Validation}{12}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}Generalization Error of Hypothesis}{12}{subsection.4.3}%
+\contentsline {section}{\numberline {5}Linear Classifiers}{13}{section.5}%
+\contentsline {subsection}{\numberline {5.1}Vectors and Hyperplanes}{13}{subsection.5.1}%
+\contentsline {paragraph}{Euclidean Embeddings}{13}{section*.22}%
+\contentsline {paragraph}{Euclidean Norm}{13}{section*.23}%
+\contentsline {paragraph}{Dot Product}{13}{section*.24}%
+\contentsline {paragraph}{Angle \& Projection}{13}{section*.25}%
+\contentsline {paragraph}{Hyperplanes}{13}{section*.27}%
+\contentsline {subsection}{\numberline {5.2}Linear Classifiers}{13}{subsection.5.2}%
+\contentsline {paragraph}{Decision Boundaries in Different Dimensions}{14}{section*.28}%
+\contentsline {paragraph}{Homogenous Linear Classifiers}{14}{section*.29}%
+\contentsline {paragraph}{Consistent Linear Classifiers}{14}{section*.30}%
+\contentsline {paragraph}{Margin}{14}{section*.31}%
+\contentsline {subsection}{\numberline {5.3}Perceptron Algorithm}{15}{subsection.5.3}%

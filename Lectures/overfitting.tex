@@ -1,0 +1,104 @@
+\section{Prediction and Overfitting}
+\textbf{Date:} \underline{Sep 4, 2025}
+
+\subsection*{Learning as Prediction}
+
+\textbf{Goal:}  
+Given a training dataset $S = \{(x_1, y_1), \dots, (x_n, y_n)\}$ drawn \textbf{i.i.d.} from an unknown distribution $\mathcal{D}$,  
+learn a hypothesis $h$ such that $h(x) \approx y$ for unseen data.
+
+\subsubsection*{World as a Distribution}
+Features (e.g., Farm, Color, Size, Firmness) and labels (e.g., Tasty) are random variables. The underlying distribution $\mathcal{D}$ defines:
+    \begin{itemize}
+        \item \textbf{Joint Distribution:} $P(X, Y)$
+        \item \textbf{Marginal Distribution:} $P(X)$
+        \item \textbf{\subsection Distribution:} $P(Y|X)$
+    \end{itemize}
+
+\subsection*{Sample vs. Prediction Error}
+
+\begin{definition}[Sample (Empirical) Error]
+\[
+\hat{L}_S(h) = \frac{1}{|S|} \sum_{(x_i,y_i)\in S} \mathbf{1}\big[h(x_i) \neq y_i\big]
+\]
+\end{definition}
+
+\begin{definition}[Prediction (True) Error]
+\[
+L_{\mathcal{D}}(h) = \mathbb{P}_{(x,y)\sim\mathcal{D}}[h(x) \neq y]
+\]
+\end{definition}
+
+Goal: Minimize \emph{true prediction error}, not just training error.
+
+\subsection*{Overfitting}
+
+Overfitting occurs when a hypothesis $h$ achieves \textbf{low training error} but \textbf{high test error} because it learns noise and idiosyncrasies of the training set instead of general patterns.
+
+Example:
+Take an i.i.d. training set $S = \{(x_1, f(x_1)), \dots\}$ and return $h_s$ such that 
+$$h_s(x) = \begin{cases} f(x_i) & \text{if } x = x_i \text{ for some }i \\ \text{flip a coin} & \text{otherwise} \end{cases}$$
+- $h_s$ has zero training error but predicts randomly on unseen data.
+
+\subsubsection*{Key Characteristics}
+\begin{itemize}
+    \item Fits the training set too closely, including random noise.
+    \item Poor generalization to unseen data.
+    \item Common when the hypothesis space is very flexible (e.g., deep trees, high-degree polynomials).
+\end{itemize}
+
+\subsection*{Overfitting in Decision Trees}
+\begin{itemize}
+    \item Fully grown decision trees can perfectly memorize the training set.
+    \item This leads to zero empirical error but poor generalization.
+    \item Needs mechanisms like early stopping or pruning to avoid overfitting.
+\end{itemize}
+
+\subsection*{Mitigating Overfitting in Decision Trees}
+
+\subsubsection*{Strategies}
+\begin{itemize}
+    \item \textbf{Limit Model Complexity:}  
+          Restrict tree depth or number of nodes.
+    \item \textbf{Early Stopping:}  
+          Stop splitting when:
+          \begin{itemize}
+              \item Error reduction after splitting is small.
+              \item Too few examples remain in a node.
+          \end{itemize}
+    \item \textbf{Pruning:}  
+          Grow the full tree, then prune back:
+          \begin{itemize}
+              \item Replace a subtree with a leaf if it does not significantly increase prediction error.
+              \item E.g., reduced-error pruning.
+          \end{itemize}
+\end{itemize}
+
+\subsection*{Inductive Bias}
+
+\begin{definition}[Inductive Bias]
+An \textbf{inductive bias} is a set of assumptions a learning algorithm uses to predict unseen data.  
+Without bias, learning from finite samples would be impossible.
+\end{definition}
+
+\subsubsection*{Inductive Bias in Decision Trees}
+- Standard IDT assumes:
+    \begin{itemize}
+        \item The simplest consistent tree is preferred.
+        \item Features are chosen based on information gain or error reduction.
+    \end{itemize}
+- If tree depth is restricted, bias increases but variance decreases.
+
+\subsection*{Bias-Variance Tradeoff}
+
+\begin{definition}[Prediction Error Decomposition]
+\[
+\text{Expected Error} = \underbrace{\text{Bias}^2}_{\text{error from assumptions}} + \underbrace{\text{Variance}}_{\text{error from data fluctuations}} + \underbrace{\sigma^2}_{\text{irreducible noise}}
+\]
+\end{definition}
+
+\begin{itemize}
+    \item \textbf{High bias:} Model too simple $\rightarrow$ underfits.
+    \item \textbf{High variance:} Model too complex $\rightarrow$ overfits.
+    \item Goal: Balance bias and variance for best generalization.
+\end{itemize}

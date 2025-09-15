@@ -1,0 +1,102 @@
+\section{Supervised Learning and KNN}
+\textbf{Date:} \underline{Aug 28, 2025}
+
+\subsection{Supervised Learning}
+
+In supervised learning, we are given a dataset:
+\[
+S = \{ (x_1, y_1), (x_2, y_2), \dots, (x_n, y_n) \}
+\]
+where $x_i \in \mathcal{X}$ is a feature vector and $y_i \in \mathcal{Y}$ is its label.  
+The goal is to learn a hypothesis function:
+\[
+h: \mathcal{X} \to \mathcal{Y}
+\]
+that approximates the unknown target function $f: \mathcal{X} \to \mathcal{Y}$.
+
+\subsubsection*{Key Concepts}
+\begin{itemize}
+    \item \textbf{Instance:} A single feature vector $\mathbf{x} \in \mathcal{X}$.
+    \item \textbf{Instance Space} $\mathcal{X}$: The set of all possible feature vectors.
+    \item \textbf{Label} $y$: The output to be predicted.
+    \item \textbf{Label Space} $\mathcal{Y}$: The set of all possible labels.
+\end{itemize}
+
+\subsubsection*{Types of Supervised Learning}
+\begin{itemize}
+    \item \textbf{Binary Classification:} $\mathcal{Y} = \{-1, +1\}$
+    \item \textbf{Multi-class Classification:} $\mathcal{Y} = \{1, 2, \dots, k\}$
+    \item \textbf{Regression:} $\mathcal{Y} \subseteq \mathbb{R}$
+    \item \textbf{Structured Output:} $\mathcal{Y} = \text{Object}$ (e.g., protein structures)
+\end{itemize}
+
+\subsection{K-Nearest Neighbors (KNN)}
+
+KNN is a non-parametric learning algorithm that predicts the label of a new instance $\mathbf{x}'$ using the labels of the $k$ closest points in the training dataset according to a similarity (or distance) measure.
+
+\begin{algobox}
+\textbf{KNN Algorithm:}
+\begin{enumerate}
+    \item \textbf{Input:} Training set $S = \{(\mathbf{x}_1,y_1), \dots, (\mathbf{x}_n,y_n)\}$, similarity function $K$, number of neighbors $k$.
+    \item For a test point $\mathbf{x}'$, compute $K(\mathbf{x}_i,\mathbf{x}')$ for all $i$.
+    \item Find the $k$ nearest neighbors:
+    \[
+    \text{knn}(\mathbf{x}') = \{ i \mid \mathbf{x}_i \text{ among $k$ closest to } \mathbf{x}' \}.
+    \]
+    \item Predict the label:
+    \[
+    \hat{y} = \arg\max_{y \in \mathcal{Y}} \sum_{i \in \text{knn}(\mathbf{x}')} \mathbf{1}(y_i = y).
+    \]
+\end{enumerate}
+\end{algobox}
+
+\subsection{Weighted KNN}
+
+Weighted KNN assigns higher weights to closer neighbors using the similarity function $K$.
+
+\[
+\hat{y} = \arg\max_{y \in \mathcal{Y}} \sum_{i \in \text{knn}(\mathbf{x}')} K(\mathbf{x}_i, \mathbf{x}') \cdot \mathbf{1}(y_i = y)
+\]
+
+\subsubsection*{Weighted KNN for Regression}
+For regression problems, the prediction is a weighted average:
+\[
+h(\mathbf{x}') = 
+\frac{\displaystyle\sum_{i \in \text{knn}(\mathbf{x}')} y_i \cdot K(\mathbf{x}_i, \mathbf{x}')}{\displaystyle\sum_{i \in \text{knn}(\mathbf{x}')} K(\mathbf{x}_i, \mathbf{x}')}
+\]
+
+\subsection{Similarity Measures}
+
+Different similarity or distance measures can be used depending on the problem:
+\begin{itemize}
+    \item \textbf{Gaussian Kernel:} 
+    \[
+    K(\mathbf{x}, \mathbf{x}') = \exp\left(-\frac{\|\mathbf{x} - \mathbf{x}'\|^2}{2}\right)
+    \]
+    \item \textbf{Laplace Kernel:} 
+    \[
+    K(\mathbf{x}, \mathbf{x}') = \exp\left(-\|\mathbf{x} - \mathbf{x}'\|\right)
+    \]
+    \item \textbf{Cosine Similarity:} 
+    \[
+    K(\mathbf{x}, \mathbf{x}') = \cos(\theta) = \frac{\mathbf{x} \cdot \mathbf{x}'}{\|\mathbf{x}\| \|\mathbf{x}'\|}
+    \]
+\end{itemize}
+
+\subsection{Types of Attributes}
+\begin{itemize}
+    \item \textbf{Categorical:} e.g., EyeColor $\in \{\text{brown, blue, green}\}$
+    \item \textbf{Boolean:} e.g., Alive $\in \{\text{True, False}\}$
+    \item \textbf{Numeric:} e.g., Age, Height
+    \item \textbf{Structured:} e.g., sentences, protein sequences
+\end{itemize}
+
+\subsection{Properties of KNN}
+\begin{itemize}
+    \item Simple, intuitive, and non-parametric.
+    \item Requires a meaningful similarity measure.
+    \item Memory-intensive: stores the entire training dataset.
+    \item Computationally expensive for large datasets.
+    \item Suffers from the \textbf{curse of dimensionality}.
+    \item KNN is more like a \textit{memorization} method rather than true generalization.
+\end{itemize}

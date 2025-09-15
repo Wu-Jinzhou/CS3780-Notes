@@ -1,0 +1,117 @@
+\section{Inductive Learning and Decision Trees}
+\textbf{Date:} \underline{Sep 2, 2025}
+
+\subsection{Inductive Learning}
+
+Inductive learning is the process of learning a general rule or hypothesis from specific observed examples.  
+Given a training dataset:
+\[
+S = \{(x_1, y_1), (x_2, y_2), \dots, (x_n, y_n)\}
+\]
+we aim to find a hypothesis $h$ such that $h(x) \approx y$ for unseen examples.
+
+\subsubsection*{Key Ideas}
+\begin{itemize}
+    \item Training data provides labeled examples of inputs and outputs.
+    \item The goal is to infer a hypothesis $h$ consistent with as many training examples as possible.
+    \item If multiple hypotheses are consistent, we aim to choose one that generalizes well.
+\end{itemize}
+
+\subsection{Version Space}
+
+\begin{definition}[Version Space]
+The \textbf{version space} is the set of all hypotheses in the hypothesis space $H$ that are consistent with the observed training examples:
+\[
+VS = \{ h \in H \;|\; \forall (x_i, y_i) \in S,\ h(x_i) = y_i \}.
+\]
+\end{definition}
+
+\subsubsection*{Using Version Space for Learning}
+\begin{itemize}
+    \item Start with the set of all hypotheses.
+    \item Remove any hypothesis inconsistent with any training example.
+    \item The remaining hypotheses form the version space.
+\end{itemize}
+
+\subsection{List-Then-Eliminate Algorithm}
+
+\begin{algobox}
+\textbf{Algorithm:} \emph{List-Then-Eliminate}
+\begin{enumerate}
+    \item Initialize $VS \leftarrow H$ (all hypotheses).
+    \item For each training example $(x_i, y_i)$:
+    \begin{itemize}
+        \item Remove all $h \in VS$ such that $h(x_i) \neq y_i$.
+    \end{itemize}
+    \item Return the remaining hypotheses in $VS$.
+\end{enumerate}
+\end{algobox}
+
+\textbf{Takeaway:}  
+Tracking the entire version space can be expensive in both time and memory.  
+Instead, we often directly construct a consistent hypothesis, e.g., using decision trees.
+
+\subsection{Decision Trees}
+
+\begin{definition}[Decision Tree]
+A decision tree represents a function $h: \mathcal{X} \to \mathcal{Y}$ as a tree structure:
+\begin{itemize}
+    \item \textbf{Internal nodes:} Test a single feature (e.g., "Color").
+    \item \textbf{Branches:} Possible values of that feature (e.g., "Red" or "Green").
+    \item \textbf{Leaf nodes:} Assign a label based on the path from root to leaf.
+\end{itemize}
+\end{definition}
+
+\subsubsection*{Using a Decision Tree}
+To classify a new example:
+\begin{enumerate}
+    \item Start at the root.
+    \item At each internal node, test the corresponding feature.
+    \item Follow the branch matching the feature value.
+    \item Stop at a leaf and return its label.
+\end{enumerate}
+
+\subsection{Top-Down Induction of Decision Trees (IDT)}
+
+\begin{algobox}
+\textbf{Algorithm:} \emph{IDT(S, Features)}
+\begin{enumerate}
+    \item If all examples in $S$ have the same label, return a leaf node with that label.
+    \item If no features remain, return a leaf node with the majority label in $S$.
+    \item Otherwise:
+    \begin{itemize}
+        \item Choose the best feature $A$ to split on.
+        \item Partition $S$ into subsets $\{S_v\}$ by the values of $A$.
+        \item For each value $v$ of $A$:
+        \begin{itemize}
+            \item Recursively call \emph{IDT($S_v$, Features $\setminus \{A\}$)}.
+        \end{itemize}
+    \end{itemize}
+\end{enumerate}
+\end{algobox}
+
+\subsection{Choosing the Best Split}
+
+\textbf{Error-Based Split Criterion:}  
+To choose the best attribute $A$ to split on:
+\[
+\text{Err}(S) = \min(\#\text{positive},\ \#\text{negative})
+\]
+\[
+\text{Err}(S \mid A) = \sum_{v} \text{Err}(S_v)
+\]
+Select $A$ that maximizes:
+\[
+\Delta \text{Err} = \text{Err}(S) - \text{Err}(S \mid A).
+\]
+
+\subsection{Properties of Decision Trees}
+
+\begin{itemize}
+    \item Easy to interpret and visualize.
+    \item Can represent complex decision boundaries.
+    \item Handles both categorical and numerical features.
+    \item Prone to overfitting if the tree grows too deep.
+    \item Typically combined with pruning techniques for better generalization.
+    \item Basis for more advanced models like Random Forests and Gradient Boosted Trees.
+\end{itemize}

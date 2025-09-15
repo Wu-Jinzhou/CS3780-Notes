@@ -1,0 +1,152 @@
+\section{Linear Classifiers}
+\textbf{Date:} \underline{Sep 11, 2025}
+
+\subsection{Vectors and Hyperplanes}
+\paragraph{Euclidean Embeddings}
+Data are represented as $d$ dimensional vectors in $\mathbb{R}^d$. The choice of representation is part of "inductive bias".
+
+\paragraph{Euclidean Norm}
+The Euclidean norm of a vector $x \in \mathbb{R}^d$ is defined as:
+\[||\vec{x}|| = \sqrt{\sum_{i=1}^{d} x_i^2}\]
+
+\paragraph{Dot Product}
+The dot product of two vectors $\vec{x}, \vec{y} \in \mathbb{R}^d$ is defined as:
+\[
+\langle \vec{x}, \vec{y} \rangle = \sum_{i=1}^{d} x_i y_i
+\]
+Alternative notation: $\vec{x} \cdot \vec{y}$ or $\vec{x}^T \vec{y}$.
+
+\paragraph{Angle \& Projection}
+$\vec{w} \cdot \vec{x} = ||\vec{w}|| ||\vec{x}|| \cos(\theta)$, where $\theta$ is the angle between $\vec{w}$ and $\vec{x}$, and $\frac{\vec{w} \cdot \vec{x}}{||\vec{w}||}$ is the signed length of the projection of $\vec{x}$ onto $\vec{w}$.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.5\textwidth]{Images/dot_product.png}
+\end{figure}
+
+\paragraph{Hyperplanes}
+In $d$-dimensional space, a \textbf{hyperplane} is defined by a vector $\vec{w} \in \mathbb{R}^d$ and a scalar $b \in \mathbb{R}$:
+\[
+\left\{ \vec{x} \in \mathbb{R}^d \mid \vec{w} \cdot \vec{x} + b = 0 \right\}
+\]
+
+\textbf{Geometric interpretation:}
+\begin{itemize}
+    \item The hyperplane is orthogonal to $\vec{w}$.
+    \item The distance to the origin (along $\vec{w}$) is $-\frac{b}{||\vec{w}||}$.
+    \item All points on the hyperplane satisfy $\vec{w} \cdot \vec{x} = -b$.
+\end{itemize}
+
+\subsection{Linear Classifiers}
+
+For a vector $\vec{w} \in \mathbb{R}^d$ and $b \in \mathbb{R}$, the hypothesis $h_{\vec{w},b} : \mathbb{R}^d \rightarrow \{-1, +1\}$ is called a $d$ dimensional linear classifier and defined as
+\[
+h_{\vec{w},b}(\vec{x}) = \mathrm{sign}(\vec{w} \cdot \vec{x} + b) =
+\begin{cases}
++1 & \vec{w} \cdot \vec{x} + b > 0 \\
+-1 & \vec{w} \cdot \vec{x} + b \leq 0
+\end{cases}
+\]
+
+Also called linear predictor or halfspace.
+
+\paragraph{Decision Boundaries in Different Dimensions}
+\begin{itemize}
+    \item \textbf{One dimension:} $h_{w,b}(x) = \mathrm{sign}(wx + b)$
+    \begin{itemize}
+        \item Decision boundary: a point (1d hyperplane) at $x = -\frac{b}{w}$
+    \end{itemize}
+    \item \textbf{Two dimensions:} $h_{\vec{w},b}(\vec{x}) = \mathrm{sign}(\vec{w} \cdot \vec{x} + b)$
+    \begin{itemize}
+        \item Decision boundary: a line (2d hyperplane) defined by $\vec{w} \cdot \vec{x} + b = 0$
+    \end{itemize}
+    \item \textbf{$d$ dimensions:} $\mathrm{sign}(\vec{w} \cdot \vec{x} + b)$
+    \begin{itemize}
+        \item Decision boundary: a hyperplane $\vec{w} \cdot \vec{x} + b = 0$
+    \end{itemize}
+\end{itemize}
+
+\paragraph{Homogenous Linear Classifiers}
+
+A classifier is \textbf{homogenous} if $b = 0$ (otherwise non-homogenous).
+
+\textbf{Fact:} Any $d$ dimensional learning problem for linear classifiers has a \textbf{homogenous} form in $d+1$ dimensions.
+
+\begin{center}
+\begin{tabular}{|p{0.45\textwidth}|p{0.45\textwidth}|}
+\hline
+\textbf{Non-homogenous:} &
+\textbf{Homogenous:} \\
+\hline
+$HS^d = \{ h_{\vec{w},b} \mid \vec{w} \in \mathbb{R}^d, b \in \mathbb{R} \}$
+
+\begin{itemize}
+    \item $\vec{x}$
+    \item $\vec{w}, b$
+    \item $\vec{w} \cdot \vec{x} + b$
+\end{itemize}
+&
+$HS^{d+1}_{homog} = \{ h_{\vec{w},b} \mid \vec{w} \in \mathbb{R}^{d+1} \}$
+
+\begin{itemize}
+    \item $\vec{x}' = (\vec{x}, 1)$
+    \item $\vec{w}' = (\vec{w}, b)$
+    \item $\vec{w}' \cdot \vec{x}' = \vec{w} \cdot \vec{x} + b$
+\end{itemize}
+\\
+\hline
+\end{tabular}
+\end{center}
+
+Without loss of generality, we will now focus on \textbf{homogenous linear classifiers} with $||w_i|| = 1$.
+
+
+\paragraph{Consistent Linear Classifiers}
+
+\begin{itemize}
+    \item Data set of labelled instances $\mathcal{S} = \{ (\vec{x}_1, y_1), (\vec{x}_2, y_2), \ldots, (\vec{x}_m, y_m) \}$.
+    \item Linear classifier $h_{\vec{w}}$ is \textbf{consistent} with $\mathcal{S}$ if for all $(\vec{x}_i, y_i) \in \mathcal{S}$:
+    \begin{itemize}
+        \item $\vec{w} \cdot \vec{x}_i > 0$ if $y_i = 1$
+        \item $\vec{w} \cdot \vec{x}_i \leq 0$ if $y_i = -1$
+    \end{itemize}
+    \item Data set $\mathcal{S}$ is \textbf{linearly separable} (zero training error) if there is a linear classifier $h_{\vec{w}}$ that is consistent with it.
+\end{itemize}
+
+\paragraph{Margin}
+A data set $\mathcal{S}$ is linearly separable with a \textbf{(geometric) margin} $\gamma$ if:
+\begin{itemize}
+    \item There is a linear classifier $h_{\vec{w}}$ that is consistent with $\mathcal{S}$.
+    \item The distance of any instance in $\mathcal{S}$ to the decision boundary of $h_{\vec{w}}$ is at least $\gamma$.
+\end{itemize}
+
+\textbf{Mathematical definition:} There is $\vec{w}$ such that $||\vec{w}|| = 1$ and for all data points $(\vec{x}_i, y_i) \in \mathcal{S}$:
+\[
+\begin{cases}
+    \vec{w} \cdot \vec{x}_i \geq \gamma & \text{if } y_i = 1 \\
+    \vec{w} \cdot \vec{x}_i \leq -\gamma & \text{if } y_i = -1
+\end{cases}
+\qquad \Longleftrightarrow \qquad
+y_i (\vec{w} \cdot \vec{x}_i) \geq \gamma
+\]
+
+\textbf{Larger margin} $\implies$ \textbf{Easier to find consistent linear classifier}.
+
+\subsection{Perceptron Algorithm}
+
+\begin{algobox}
+    \textbf{The Perceptron Algorithm (homogeneous \& batch)}
+
+    \begin{itemize}
+        \item \textbf{Input:} training data $\mathcal{S} = \{ (\vec{x}_1, y_1), \ldots, (\vec{x}_m, y_m) \}$
+        \item \textbf{Initialize} $\vec{w}^{(0)} = (0, \ldots, 0)$ and $t = 0$
+        \item \textbf{While} there is $i \in [m]$ such that $y_i (\vec{w}^{(t)} \cdot \vec{x}_i) \leq 0$:
+        \begin{itemize}
+            \item $\vec{w}^{(t+1)} = \vec{w}^{(t)} + y_i \vec{x}_i$
+            \item $t \leftarrow t + 1$
+        \end{itemize}
+        \item \textbf{End While}
+        \item \textbf{Output} $\vec{w}^{(t)}$
+    \end{itemize}
+\end{algobox}
+Good Practice: Initialize $\vec{w}^{(0)}$ randomly. Shuffle $\mathcal{S}$ and check data one-by-one for update condition. Iterate until no updates are needed or maximum iterations are reached.
