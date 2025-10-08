@@ -1,0 +1,101 @@
+\section{Support Vector Machines}
+\textbf{Date:} \underline{Sep 18, 2025}
+
+\begin{itemize}
+    \item \textbf{Assumption:} Training examples are linearly separable.
+    \item \textbf{Optimal Hyperplane:} The separating hyperplane that maximizes the distance to the closest training examples.
+\end{itemize}
+
+\subsection{Margin of a Linear Classifier}
+
+\textbf{Definition:} For a linear classifier $h_{w,b}$, the (functional) margin $\gamma_i$ of an example $(x_i, y_i)$ with $x \in \mathbb{R}^N$ and $y \in \{-1, +1\}$ is
+\[
+\gamma_i = y_i \left( \vec{w} \cdot \vec{x}_i + b \right)
+\]
+
+\textbf{Definition:} The margin is called \textbf{geometric margin}, if $\|\vec{w}\| = 1$. For general $\vec{w}$, the term functional margin is used to indicate that the norm of $\vec{w}$ is not necessarily 1.
+
+\textbf{Definition:} The (hard) margin of a linear classifier $h_{w,b}$ on sample $S$ is
+\[
+\gamma = \min_{(x_i, y_i) \in S} y_i \left( \vec{w} \cdot \vec{x}_i + b \right)
+\]
+
+\subsection{Computing Optimal Hyperplanes}
+
+\begin{itemize}
+    \item \textbf{Requirement:} Zero training error.
+    \[
+        \forall (\vec{x}_i, y_i) \in S: \quad y_i \left( \vec{w} \cdot \vec{x}_i + b \right) > 0
+    \]
+    \item \textbf{Additional Requirement:} Maximize the distance to the closest training examples.
+    \[
+        \max_{\vec{w}, b, \gamma} \gamma \quad \text{s.t.} \quad \gamma = \min_{(\vec{x}_i, y_i) \in S} \left| \frac{1}{\|\vec{w}\|} \left( \vec{w} \cdot \vec{x}_i + b \right) \right|
+    \]
+    \item \textbf{Combine:}
+    \[
+        \max_{\vec{w}, b, \gamma} \gamma \quad \text{s.t.} \quad \gamma = \min_{(\vec{x}_i, y_i) \in S} \left[ \frac{y_i}{\|\vec{w}\|} \left( \vec{w} \cdot \vec{x}_i + b \right) \right]
+    \]
+\end{itemize}
+
+We can rewrite the minimization as a set of constraints:
+\[
+\max_{\vec{w}, b, \gamma} \gamma \quad \text{s.t.} \quad \forall (\vec{x}_i, y_i) \in S: \frac{y_i}{\|\vec{w}\|} \left( \vec{w} \cdot \vec{x}_i + b \right) \geq \gamma
+\]
+
+This problem is invariant to scaling of $\vec{w}$ and $b$. We can fix the scale by setting $\|\vec{w}\| = 1/\gamma$:
+\[
+\max_{\vec{w}, b} \frac{1}{\|\vec{w}\|} \quad \text{s.t.} \quad \forall (\vec{x}_i, y_i) \in S: y_i \left( \vec{w} \cdot \vec{x}_i + b \right) \geq 1
+\]
+
+This is equivalent to minimizing $\|\vec{w}\|$:
+\[
+\min_{\vec{w}, b} \|\vec{w}\| \quad \text{s.t.} \quad \forall (\vec{x}_i, y_i) \in S: y_i \left( \vec{w} \cdot \vec{x}_i + b \right) \geq 1
+\]
+
+For mathematical convenience, we minimize $\frac{1}{2} \vec{w} \cdot \vec{w}$:
+\[
+\min_{\vec{w}, b} \frac{1}{2} \vec{w} \cdot \vec{w} \quad \text{s.t.} \quad \forall (\vec{x}_i, y_i) \in S: y_i \left( \vec{w} \cdot \vec{x}_i + b \right) \geq 1
+\]
+
+This is the standard form of the hard-margin SVM optimization problem.
+
+\subsection{Hard Margin SVM}
+
+\begin{itemize}
+    \item \textbf{Goal:} Find the separating hyperplane with the largest distance (margin) to the closest training examples.
+    \item \textbf{Optimization Problem:}
+    \[
+        \min_{\vec{w}, b} \frac{1}{2} \vec{w} \cdot \vec{w} \quad \text{s.t.} \quad y_i(\vec{w} \cdot \vec{x}_i + b) \geq 1 \quad \forall i
+    \]
+    \item \textbf{Support Vectors:} Training examples that lie exactly on the margin, i.e.,
+    \[
+        y_i(\vec{w} \cdot \vec{x}_i + b) = 1
+    \]
+    \item The margin $\gamma$ is the distance from the hyperplane to the closest points (support vectors).
+    \item Limitations: For some training data, there is no separating hyperplane. Complete separation (i.e. zero training error) can lead to suboptimal prediction error.
+\end{itemize}
+
+\subsection{Soft Margin SVM}
+\begin{itemize}
+    \item \textbf{Idea:} Maximize margin and minimize training error. Allows some misclassification by introducing slack variables $\xi_i$.
+    \item \textbf{Optimization Problem (Primal):}
+    \[
+        \min_{\vec{w}, b, \vec{\xi}} \frac{1}{2} \vec{w} \cdot \vec{w} + C \sum_{i=1}^n \xi_i
+    \]
+    \[
+        \text{s.t.} \quad y_i(\vec{w} \cdot \vec{x}_i + b) \geq 1 - \xi_i, \quad \xi_i \geq 0 \quad \forall i
+    \]
+    \item \textbf{Slack variable} $\xi_i$ measures how much $(x_i, y_i)$ fails to achieve the margin.
+    \begin{itemize}
+        \item \textbf{Idea:} Slack variables $\xi_i$ capture training error.
+        \item For any training example $(\vec{x}_i, y_i)$:
+        \begin{itemize}
+            \item $\xi_i \geq 1 \iff y_i(\vec{w} \cdot \vec{x}_i + b) \leq 0$ (error)
+            \item $0 < \xi_i < 1 \iff 0 < y_i(\vec{w} \cdot \vec{x}_i + b) < 1$ (correct, but within margin)
+            \item $\xi_i = 0 \iff y_i(\vec{w} \cdot \vec{x}_i + b) \geq 1$ (correct)
+        \end{itemize}
+        \item The sum $\sum_i \xi_i$ is an upper bound on the number of training errors.
+        \item $C$ controls the trade-off between margin size and training error.
+    \end{itemize}
+    \item Examples with margin less than or equal to 1 are support vectors.
+\end{itemize}

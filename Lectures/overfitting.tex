@@ -12,7 +12,7 @@ Features (e.g., Farm, Color, Size, Firmness) and labels (e.g., Tasty) are random
     \begin{itemize}
         \item \textbf{Joint Distribution:} $P(X, Y)$
         \item \textbf{Marginal Distribution:} $P(X)$
-        \item \textbf{\subsection Distribution:} $P(Y|X)$
+        \item \textbf{Conditional Distribution:} $P(Y|X)$
     \end{itemize}
 
 \subsection*{Sample vs. Prediction Error}
@@ -98,7 +98,7 @@ Without bias, learning from finite samples would be impossible.
 \end{definition}
 
 \begin{itemize}
-    \item \textbf{High bias:} Model too simple $\rightarrow$ underfits.
-    \item \textbf{High variance:} Model too complex $\rightarrow$ overfits.
-    \item Goal: Balance bias and variance for best generalization.
+    \item \textbf{Bias} measures error from erroneous assumptions in the learning algorithm. Simple models (left side) have high bias and underfit the data.
+    \item \textbf{Variance} measures error from sensitivity to small fluctuations in the training set. Complex models (right side) have high variance and overfit.
+    \item \textbf{Total error} is minimized at an intermediate model complexity, balancing bias and variance.
 \end{itemize}

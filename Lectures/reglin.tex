@@ -1,0 +1,219 @@
+\section{Regularized Linear Models}
+\textbf{Date:} \underline{Sep 25, 2025}
+
+\subsection{ERM Learning}
+
+\begin{itemize}
+    \item \textbf{Examples:} KNN, decision trees, Perceptron, SVM.
+    \item \textbf{Modelling Step:} Select a family of classification rules $\mathcal{H}$ to consider (hypothesis space, features).
+    \item \textbf{Training Principle:}
+    \begin{itemize}
+        \item Given training sample $(\vec{x}_1, y_1), \ldots, (\vec{x}_n, y_n)$
+        \item Find $h \in \mathcal{H}$ with lowest training error
+        \item This is called \textit{Empirical Risk Minimization (ERM)}
+    \end{itemize}
+    \item \textbf{Argument:} Low training error leads to low prediction error, if overfitting is controlled (\textit{generalization}).
+\end{itemize}
+
+\subsection{Bayes Decision Rule (0/1 loss)}
+\begin{itemize}
+    \item \textbf{Assumption:} The decision setting is known: $P(X,Y) = P(Y\mid X)P(X)$.
+    \item \textbf{Goal:} For a given instance $\vec{x}$, choose $\hat{y}$ to minimize prediction error under $0/1$ loss
+    \[
+      L_{0/1}(\hat{y},y)=\begin{cases}
+      1,& \hat{y}\neq y\\
+      0,& \hat{y}=y~.
+      \end{cases}
+    \]
+    \item \textbf{Rule:} 
+    \[
+      h_{\text{Bayes}}(\vec{x})=\arg\max_{y\in\mathcal{Y}} P(Y=y\mid X=\vec{x}).
+    \]
+\end{itemize}
+
+\subsection{Decision via Bayes Risk}
+\begin{itemize}
+    \item \textbf{Bayes Risk} (expected loss of classifier $h$ under distribution $P$ and loss $L$):
+    \[
+      \mathrm{Err}_{P}(h)=\mathbb{E}_{\vec{x},y\sim P(X,Y)}\!\!\big[L(h(\vec{x}),y)\big]
+      =\mathbb{E}_{\vec{x}\sim P(X)}\big[\mathbb{E}_{y\sim P(Y\mid \vec{x})}[L(h(\vec{x}),y)]\big].
+    \]
+    \item \textbf{Bayes Decision Rule} minimizes the conditional risk:
+    \[
+      h_{\text{Bayes}}(\vec{x})=\arg\min_{\hat{y}\in\mathcal{Y}}
+      \sum_{y\in\mathcal{Y}} L(\hat{y},y)\,P(Y=y\mid X=\vec{x}).
+    \]
+    \item \textbf{Minimal risk for $0/1$ loss:}
+    \[
+      \mathrm{Err}_{P}(h_{\text{Bayes}})
+      =\mathbb{E}_{\vec{x}\sim P(X)}\!\left[1-\max_{y\in\mathcal{Y}} P(Y=y\mid X=\vec{x})\right].
+    \]
+\end{itemize}
+
+\subsection{Learning Conditional Probabilities}
+\begin{itemize}
+    \item \textbf{Modeling:} Choose a parametric family $P(Y\mid X,\vec{w})$.
+    \item \textbf{Training:} Given $(\vec{x}_i,y_i)_{i=1}^n$, find $\hat{\vec{w}}$ that best fits data:
+    \begin{itemize}
+        \item \textit{Maximum Likelihood (ML)} or \textit{Maximum a Posteriori (MAP)}.
+    \end{itemize}
+    \item \textbf{Classification:} Use Bayes rule with learned $P(Y\mid X,\hat{\vec{w}})$.
+    \item \textbf{Argument:} If the learned conditional distribution is close to the true one, the induced decision rule is accurate.
+\end{itemize}
+
+\subsection{Logistic Regression Model (binary $y\in\{-1,+1\}$)}
+\begin{itemize}
+    \item \textbf{Likelihood:} $P(Y_i=y\mid \vec{x}_i,\vec{w})=\sigma(y\,\vec{w}\!\cdot\!\vec{x}_i)$,
+    \qquad where $\displaystyle \sigma(z)=\frac{1}{1+e^{-z}}$.
+    \item \textbf{Symmetry:} $1-\sigma(\vec{w}\!\cdot\!\vec{x})=\sigma(-\vec{w}\!\cdot\!\vec{x})$.
+\end{itemize}
+
+\subsection{Logistic Regression Training (Conditional MLE)}
+\begin{itemize}
+    \item \textbf{Objective:}
+    \[
+      \hat{\vec{w}}=\arg\max_{\vec{w}} \prod_{i=1}^n P(y_i\mid \vec{x}_i,\vec{w})
+      \;=\; \arg\min_{\vec{w}} \sum_{i=1}^n \ln\!\big(1+e^{-y_i\,\vec{w}\cdot\vec{x}_i}\big).
+    \]
+    \item \textbf{Derivation Sketch:}
+    \begin{enumerate}
+        \item i.i.d.\ data $\Rightarrow$ factorized likelihood $\prod_i P(y_i\mid \vec{x}_i,\vec{w})$.
+        \item Plug logistic form $P(y_i\mid \vec{x}_i,\vec{w})=\sigma(y_i\vec{w}\!\cdot\!\vec{x}_i)$.
+        \item Apply $-\ln(\cdot)$ (monotone decreasing) and log-product $\ln\prod=\sum\ln$.
+        \item Use $\sigma(z)=1/(1+e^{-z})$ to obtain logistic loss.
+    \end{enumerate}
+    \item \textbf{Prediction:} $h(\vec{x})=\operatorname{sign}(\hat{\vec{w}}\cdot \vec{x})$ (equivalently $\arg\max_y P(y\mid \vec{x},\hat{\vec{w}})$).
+    \item \textbf{Issue (separable data):} If data are linearly separable, the MLE drives $\|\vec{w}\|\to\infty$ since $y_i\,\vec{w}\!\cdot\!\vec{x}_i>0$ can be increased without bound.
+\end{itemize}
+
+\subsection{Regularized Logistic Regression: Probabilistic View}
+\begin{itemize}
+    \item \textbf{Likelihood:} Same as above.
+    \item \textbf{Prior on weights:} $\vec{w}\sim \mathcal{N}(\vec{0},\sigma^2 I)$, i.e.
+    \[
+      P(\vec{w})=\left(\frac{1}{\sigma\sqrt{2\pi}}\right)^{\!d}
+      \exp\!\left(-\frac{\vec{w}\cdot\vec{w}}{2\sigma^2}\right).
+    \]
+    \item \textbf{MAP Training:}
+    \[
+      \hat{\vec{w}}
+      =\arg\max_{\vec{w}} P(\vec{w})\prod_{i=1}^n P(y_i\mid \vec{x}_i,\vec{w})
+      =\arg\min_{\vec{w}}
+      \left\{\frac{\|\vec{w}\|_2^2}{2\sigma^2}+\sum_{i=1}^n \ln\!\big(1+e^{-y_i\,\vec{w}\cdot\vec{x}_i}\big)\right\}.
+    \]
+    \item \textbf{Equivalent scaled form (ignore positive constants):}
+    \[
+      \hat{\vec{w}}=\arg\min_{\vec{w}}
+      \left\{\frac{1}{2}\|\vec{w}\|_2^2+\sigma^{2}\sum_{i=1}^n \ln\!\big(1+e^{-y_i\,\vec{w}\cdot\vec{x}_i}\big)\right\}.
+    \]
+    \item \textbf{Interpretation:} Gaussian prior $\Rightarrow$ $\ell_2$-regularization; controls $\|\vec{w}\|$ and prevents blow-up on separable data.
+\end{itemize}
+
+\subsection{Regularized Logistic Regression: Summary}
+\begin{itemize}
+    \item \textbf{Training Objective (ridge-regularized log-loss):}
+    \[
+      \hat{\vec{w}}=\arg\min_{\vec{w}} \;\frac{\lambda}{2}\|\vec{w}\|_2^2
+      + \sum_{i=1}^n \ln\!\big(1+e^{-y_i\,\vec{w}\cdot\vec{x}_i}\big),
+      \quad \text{with } \lambda=\frac{1}{\sigma^2}.
+    \]
+    \item \textbf{Prediction:} $h(\vec{x})=\arg\max_{y}P(y\mid \vec{x},\hat{\vec{w}})=\mathrm{sign}(\hat{\vec{w}}\cdot \vec{x})$.
+\end{itemize}
+
+\subsection{Linear Regression Model}
+\begin{itemize}
+    \item \textbf{Data:} $\mathcal{S}=\{(\vec{x}_1,y_1),\ldots,(\vec{x}_n,y_n)\}$ with $\vec{x}_i\in\mathbb{R}^d$ and $y_i\in\mathbb{R}$.
+    \item \textbf{Likelihood model:} $Y_i\mid \vec{x}_i,\vec{w}\sim \mathcal{N}(\vec{w}\!\cdot\!\vec{x}_i,\eta^2)$, i.e.
+    \[
+      P(Y_i=y\mid \vec{x}_i,\vec{w})=\frac{1}{\eta\sqrt{2\pi}}
+      \exp\!\left(-\frac{(\vec{w}\!\cdot\!\vec{x}_i-y)^2}{2\eta^2}\right).
+    \]
+\end{itemize}
+
+\subsection{Linear Regression Training (Conditional MLE)}
+\begin{itemize}
+    \item \textbf{Objective:}
+    \[
+      \hat{\vec{w}}=\arg\max_{\vec{w}} \prod_{i=1}^n P(y_i\mid \vec{x}_i,\vec{w})
+      \;=\; \arg\min_{\vec{w}} \sum_{i=1}^n \Big[-\ln P(y_i\mid \vec{x}_i,\vec{w})\Big].
+    \]
+    \item \textbf{Derivation:}
+    \[
+      \hat{\vec{w}}
+      =\arg\min_{\vec{w}} \sum_{i=1}^n \left[-\ln\!\Big(\tfrac{1}{\eta\sqrt{2\pi}}\Big) 
+      + \frac{(\vec{w}\!\cdot\!\vec{x}_i-y_i)^2}{2\eta^2}\right]
+      =\arg\min_{\vec{w}} \frac{1}{2\eta^2}\sum_{i=1}^n(\vec{w}\!\cdot\!\vec{x}_i-y_i)^2.
+    \]
+    \item \textbf{Conclusion:} MLE $\Longleftrightarrow$ least-squares (ignoring positive constants).
+    \item \textbf{Prediction:} $h(\vec{x})=\arg\max_y P(y\mid \vec{x},\hat{\vec{w}})=\hat{\vec{w}}\!\cdot\!\vec{x}$ (posterior mean for Gaussian).
+\end{itemize}
+
+\subsection{Ridge Regression (MAP for a Gaussian prior)}
+\begin{itemize}
+    \item \textbf{Likelihood:} same as linear regression:
+    $P(Y_i\mid \vec{x}_i,\vec{w})=\mathcal{N}(\vec{w}\!\cdot\!\vec{x}_i,\eta^2)$.
+    \item \textbf{Prior:} $\vec{w}\sim \mathcal{N}(\vec{0},\sigma^2 I)$ with
+    \[
+      P(\vec{w})=\left(\frac{1}{\sigma\sqrt{2\pi}}\right)^d
+      \exp\!\left(-\frac{\vec{w}\!\cdot\!\vec{w}}{2\sigma^2}\right).
+    \]
+    \item \textbf{MAP training:}
+    \[
+      \hat{\vec{w}}=\arg\max_{\vec{w}} P(\vec{w})\prod_{i=1}^n P(y_i\mid \vec{x}_i,\vec{w})
+      =\arg\min_{\vec{w}} \left\{\frac{\vec{w}\!\cdot\!\vec{w}}{2\sigma^2}
+      +\frac{1}{2\eta^2}\sum_{i=1}^n(\vec{w}\!\cdot\!\vec{x}_i-y_i)^2\right\}.
+    \]
+    \item \textbf{Scaled form (drop positive constants):}
+    \[
+      \hat{\vec{w}}=\arg\min_{\vec{w}} \frac{1}{2}\|\vec{w}\|_2^2
+      + C\sum_{i=1}^n(\vec{w}\!\cdot\!\vec{x}_i-y_i)^2,
+      \qquad \text{where } C=\frac{\sigma^2}{2\eta^2}.
+    \]
+    \item \textbf{Prediction:} $h(\vec{x})=\hat{\vec{w}}\!\cdot\!\vec{x}$.
+\end{itemize}
+
+\subsection{Discriminative Training: A Unifying View}
+\begin{itemize}
+    \item \textbf{Template objective:}
+    \[
+      \min_{\vec{w}}\; R(\vec{w}) \;+\; C\sum_{i=1}^n L\!\big(\vec{w}\!\cdot\!\vec{x}_i,\,y_i\big).
+    \]
+    \item \textbf{Examples (classification):}
+    \begin{itemize}
+        \item \textit{Soft-margin SVM:} $R(\vec{w})=\tfrac{1}{2}\vec{w}\!\cdot\!\vec{w}$,\quad
+        $L(\hat{y},y)=\max(0,1-y\hat{y})$.
+        \item \textit{Perceptron:} $R(\vec{w})=0$,\quad $L(\hat{y},y)=\max(0,-y\hat{y})$.
+        \item \textit{Reg.\ Logistic Regression:} $R(\vec{w})=\tfrac{1}{2}\vec{w}\!\cdot\!\vec{w}$,\quad
+        $L(\hat{y},y)=\ln\!\big(1+e^{-y\hat{y}}\big)$.
+    \end{itemize}
+    \item \textbf{Examples (regression):}
+    \begin{itemize}
+        \item \textit{Linear Regression:} $R(\vec{w})=0$,\quad $L(\hat{y},y)=(y-\hat{y})^2$.
+        \item \textit{Ridge Regression:} $R(\vec{w})=\tfrac{1}{2}\vec{w}\!\cdot\!\vec{w}$,\quad $L(\hat{y},y)=(y-\hat{y})^2$.
+        \item \textit{Lasso:} $R(\vec{w})=\lambda\sum_{j=1}^d |w_j|$,\quad $L(\hat{y},y)=(y-\hat{y})^2$.
+    \end{itemize}
+\end{itemize}
+
+\subsection{``45 ML Algorithms on 1 Slide'': Building Blocks}
+\begin{itemize}
+    \item \textbf{Common loss functions $L$:}
+    \begin{itemize}
+        \item Hinge: $\max(0,1-y\hat{y})$
+        \item Logistic: $\ln\!\big(1+e^{-y\hat{y}}\big)$
+        \item Exponential: $e^{-y\hat{y}}$
+        \item Squared error: $(y-\hat{y})^2$
+        \item Absolute error: $\lvert y-\hat{y}\rvert$
+    \end{itemize}
+    \item \textbf{Common regularizers $R$:}
+    \begin{itemize}
+        \item $\ell_2$: $\vec{w}\!\cdot\!\vec{w}$
+        \item $\ell_1$: $\sum_{j=1}^d |w_j|$
+        \item $\ell_0$: $\big|\{j: w_j\neq 0\}\big|$
+    \end{itemize}
+    \item \textbf{Beyond linear scores $\vec{w}\!\cdot\!\vec{x}$:}
+    \begin{itemize}
+        \item \textit{Kernels:} $\vec{w}\!\cdot\!\phi(\vec{x})$
+        \item \textit{Deep networks:} $f(\vec{x};\vec{w})$
+        \item \textit{Boosting:} $\sum_j \alpha_j\,\mathrm{Tree}_j(\vec{x})$
+    \end{itemize}
+\end{itemize}

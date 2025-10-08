@@ -1,0 +1,250 @@
+\section{Kernels and Duality}
+\textbf{Date:} \underline{Sep 23, 2025}
+
+\paragraph{Non-linear Problems}
+Some tasks have non-linear structure, and no hyperplane is sufficiently accurate.
+
+For those problems, we can extend the feature space. For example, for quadratic features, we can have:
+\begin{itemize}
+    \item \textbf{Input Space:} $\vec{x} = (x_1, x_2)$ \hspace{1cm} (2 attributes)
+    \item \textbf{Feature Space:} $\Phi(\vec{x}) = (x_1^2, x_2^2, x_1, x_2, x_1 x_2, 1)$ \hspace{1cm} (6 attributes)
+\end{itemize}
+
+\paragraph{SVM with Feature Map}
+Support Vector Machines (SVMs) can use a feature map $\Phi(\vec{x})$ to transform the input into a higher-dimensional space, making non-linear problems linearly separable.
+
+\begin{itemize}
+    \item \textbf{Training:} SVMs solve the following optimization problem:
+    \begin{align*}
+        \text{minimize:} \quad & P(\vec{w}, b, \vec{\xi}) = \frac{1}{2} \vec{w} \cdot \vec{w} + C \sum_{i=1}^n \xi_i \\
+        \text{subject to:} \quad & y_i [\vec{w} \cdot \Phi(\vec{x}_i) + b] \geq 1 - \xi_i \quad \forall i \\
+        & \xi_i > 0 \quad \forall i
+    \end{align*}
+    \item \textbf{Classification:} The decision function is:
+    \[
+        h(\vec{x}) = \text{sign} \left[ \vec{w}^* \cdot \Phi(\vec{x}) + b \right]
+    \]
+\end{itemize}
+
+\textbf{Problems:}
+\begin{itemize}
+    \item \textbf{Computational Challenge:} Mapping to high-dimensional feature spaces can be computationally expensive.
+    \item \textbf{Overfitting:} Using many features increases the risk of overfitting, so regularization and careful kernel choice are important.
+\end{itemize}
+
+\subsection{Dual Perceptron}
+
+\paragraph{(Batch) Perceptron Algorithm}
+\begin{itemize}
+    \item Initialize $\vec{\alpha} = \vec{0}$ (the dual variables)
+    \item Repeat for $E$ epochs:
+    \begin{itemize}
+        \item For $i = 1$ to $m$:
+        \begin{itemize}
+            \item If $y_i \left( \sum_{j=1}^m \alpha_j y_j (\vec{x}_j \cdot \vec{x}_i) \right) \leq 0$ then $\alpha_i = \alpha_i + 1$
+        \end{itemize}
+    \end{itemize}
+    \item The prediction for a new $\vec{x}$ is:
+    \[
+        h(\vec{x}) = \text{sign} \left( \sum_{j=1}^m \alpha_j y_j (\vec{x}_j \cdot \vec{x}) \right)
+    \]
+\end{itemize}
+
+\[
+    \vec{w} \cdot \vec{x}_i = 
+    \left( \sum_{j=1}^m \alpha_j y_j \vec{x}_j \right) \cdot \vec{x}_i = 
+    \sum_{j=1}^m \alpha_j y_j (\vec{x}_j \cdot \vec{x}_i)
+\]
+
+Instead of tracking the weight, we track the number of updates made by each training example.
+The hyperplane output by the Perceptron can always be expressed as a linear combination of the training data.
+
+\paragraph{Primal vs. Dual Representation}
+
+\begin{itemize}
+    \item Primal Representation:
+    \begin{itemize}
+        \item Weight vector $\vec{w} \in \mathbb{R}^d$
+        \item Threshold $b \in \mathbb{R}$
+    \end{itemize}
+    \item Dual Representation:
+    \begin{itemize}
+        \item Training data $(\vec{x}_1, y_1), \ldots, (\vec{x}_m, y_m)$
+        \item Vector of dual variables $\vec{\alpha}$
+        \item Threshold $b \in \mathbb{R}$
+    \end{itemize}
+\end{itemize}
+
+\paragraph{What is Duality good for?}
+
+\begin{enumerate}
+    \item Dual variables give insight into the data.
+    \item If dimensionality $d$ of $\vec{x}$ is large, working in the dual representation can be more efficient if $\vec{x}_i \cdot \vec{x}_j$ is efficient.
+    \item Duality lets us prove theorems about the generalization error of the classifier.
+\end{enumerate}
+
+\subsection{Dual SVM}
+
+\begin{itemize}
+    \item \textbf{Primal Optimization Problem:}
+    \begin{align*}
+        \text{minimize:} \quad & P(\vec{w}, b, \vec{\xi}) = \frac{1}{2} \vec{w} \cdot \vec{w} + C \sum_{i=1}^n \xi_i \\
+        \text{subject to:} \quad & y_i [\vec{w} \cdot \vec{x}_i + b] \geq 1 - \xi_i \quad \forall i \\
+        & \xi_i \geq 0 \quad \forall i
+    \end{align*}
+
+    \item \textbf{Dual Optimization Problem:}
+    \begin{align*}
+        \text{maximize:} \quad & D(\vec{\alpha}) = \sum_{i=1}^n \alpha_i - \frac{1}{2} \sum_{i=1}^n \sum_{j=1}^n y_i y_j \alpha_i \alpha_j (\vec{x}_i \cdot \vec{x}_j) \\
+        \text{subject to:} \quad & \sum_{i=1}^n y_i \alpha_i = 0 \\
+        & 0 \leq \alpha_i \leq C \quad \forall i
+    \end{align*}
+
+    \item \textbf{Theorem:} If $(\vec{w}^*, b^*, \vec{\xi}^*)$ is the solution of the Primal and $\vec{\alpha}^*$ is the solution of the Dual, then
+    \[
+        \vec{w}^* = \sum_{i=1}^m \alpha_i^* y_i \vec{x}_i
+        \qquad \text{and} \qquad
+        P(\vec{w}^*, b^*, \vec{\xi}^*) = D(\vec{\alpha}^*)
+    \]
+\end{itemize}
+
+Dual variable $\alpha_i$ is proportional to force on data point.
+More formally, Dual variable $\alpha_i^*$ indicates the ``influence'' of training example $(\vec{x}_i, y_i)$.
+
+\begin{itemize}
+    \item $\vec{w}^* = \sum_{i=1}^m \alpha_i^* y_i \vec{x}_i$
+    \item \textbf{Definition:} $(\vec{x}_i, y_i)$ is a \textit{support vector} (SV) if and only if $\alpha_i^* > 0$.
+    \item If $\xi_i^* > 0$, then $\alpha_i^* = C$.
+    \item If $0 \leq \alpha_i^* < C$, then $\xi_i^* = 0$.
+    \item If $0 < \alpha_i^* < C$, then $y_i \left( \vec{x}_i \cdot \vec{w}^* + b^* \right) \text{(functional margin)} = 1$.
+\end{itemize}
+
+\paragraph{Leave-One-Out Error and Support Vectors}
+
+Leave-one-out (LOO) cross validation is a good estimate of the generalization error for large $n$:
+\[
+    err_{loo}(A(S)) \approx err_P(A(S))
+\]
+
+\textbf{Theorem [Vapnik]:} For any SVM,
+\[
+    err_{loo}(SVM(S)) \leq \frac{1}{m} \#SV
+\]
+where $\#SV$ is the number of support vectors.
+
+\textbf{Theorem [Vapnik]:} For a homogeneous hard-margin SVM,
+\[
+    err_{loo}(SVM(S)) \leq \frac{1}{m} \frac{R^2}{\gamma^2}
+\]
+where
+\[
+    R^2 = \max_{i \in [1..m]} \vec{x}_i \cdot \vec{x}_i
+\]
+and $\gamma$ is the margin on the training sample $S$.
+
+\subsection{Non-Linear Rules through Kernels}
+
+\paragraph{Kernel Trick}
+
+Instead of explicitly mapping $\vec{x}$ to a high-dimensional feature space, we use a \textbf{kernel function} $K(\vec{x}, \vec{z})$ that computes the inner product in the feature space:
+\[
+    K(\vec{x}, \vec{z}) = \Phi(\vec{x}) \cdot \Phi(\vec{z})
+\]
+This allows us to run algorithms that depend only on dot products without ever computing $\Phi(\vec{x})$ directly.
+
+\paragraph{Polynomial Kernel Example}
+
+For $\vec{x} = (x_1, x_2)$, the degree-2 polynomial kernel is:
+\[
+    K(\vec{x}, \vec{z}) = (\vec{x} \cdot \vec{z} + 1)^2
+\]
+This corresponds to the feature map:
+\[
+    \Phi(\vec{x}) = (x_1^2,\, x_2^2,\, \sqrt{2}x_1,\, \sqrt{2}x_2,\, \sqrt{2}x_1x_2,\, 1)^\top
+\]
+so that
+\[
+    K(\vec{x}, \vec{z}) = \Phi(\vec{x}) \cdot \Phi(\vec{z})
+\]
+
+\paragraph{SVM with Kernel}
+
+\begin{itemize}
+    \item \textbf{Dual Optimization with Kernel:}
+    \begin{align*}
+        \text{maximize:} \quad & D(\vec{\alpha}) = \sum_{i=1}^n \alpha_i - \frac{1}{2} \sum_{i=1}^n \sum_{j=1}^n y_i y_j \alpha_i \alpha_j K(\vec{x}_i, \vec{x}_j) \\
+        \text{subject to:} \quad & \sum_{i=1}^n y_i \alpha_i = 0 \\
+        & 0 \leq \alpha_i \leq C \quad \forall i
+    \end{align*}
+    \item \textbf{Classification Rule:}
+    \[
+        h(\vec{x}) = \text{sign} \left( \sum_{i=1}^n \alpha_i y_i K(\vec{x}_i, \vec{x}) + b \right)
+    \]
+    \item \textbf{Common Kernels:}
+    \begin{itemize}
+        \item Linear: $K(\vec{a}, \vec{b}) = \vec{a} \cdot \vec{b}$
+        \item Polynomial: $K(\vec{a}, \vec{b}) = (\vec{a} \cdot \vec{b} + 1)^k$
+        \item Radial Basis Function (RBF): $K(\vec{a}, \vec{b}) = \exp\left(-\gamma \|\vec{a} - \vec{b}\|^2\right)$
+        \item Sigmoid: $K(\vec{a}, \vec{b}) = \tanh(\gamma \vec{a} \cdot \vec{b} + c)$
+    \end{itemize}
+\end{itemize}
+
+The kernel trick allows SVMs to efficiently learn non-linear decision boundaries by implicitly operating in high-dimensional feature spaces.
+
+\subsection{Designing Kernels}
+
+\paragraph{Definition:}
+Let $X$ be a nonempty set. A function $K$ is a \textbf{valid} kernel in $X$ if for all $m$ and all $x_1, \ldots, x_m \in X$, it produces a Gram matrix
+\[
+    G_{ij} = K(x_i, x_j)
+\]
+that is symmetric
+\[
+    G = G^T
+\]
+and positive semi-definite
+\[
+    \forall \vec{\alpha} : \vec{\alpha}^T G \vec{\alpha} \geq 0
+\]
+
+Any inner product is a kernel. Most properties of inner products also hold for kernels.
+
+\paragraph{How to Construct Kernels}
+
+\paragraph{Theorem:}
+Let $K_1$ and $K_2$ be valid kernels over $X \times X$, $\alpha \geq 0$, $0 \leq \lambda \leq 1$, $f$ a real-valued function on $X$, $\Phi: X \to \mathbb{R}^N$ with a kernel $K_3$ over $\mathbb{R}^N \times \mathbb{R}^N$, and $K$ a symmetric positive semi-definite matrix. Then the following functions are valid kernels:
+\begin{align*}
+    K(\vec{x}, \vec{z}) &= \lambda K_1(\vec{x}, \vec{z}) + (1 - \lambda) K_2(\vec{x}, \vec{z}) \\
+    K(\vec{x}, \vec{z}) &= \alpha K_1(\vec{x}, \vec{z}) \\
+    K(\vec{x}, \vec{z}) &= K_1(\vec{x}, \vec{z}) K_2(\vec{x}, \vec{z}) \\
+    K(\vec{x}, \vec{z}) &= f(\vec{x}) f(\vec{z}) \\
+    K(\vec{x}, \vec{z}) &= K_3(\Phi(\vec{x}), \Phi(\vec{z})) \\
+    K(\vec{x}, \vec{z}) &= \vec{x}^T K \vec{z}
+\end{align*}
+
+These closure properties allow us to construct new valid kernels from existing ones.
+
+\subsection{Properties of SVMs with Kernels}
+
+\begin{itemize}
+    \item \textbf{Expressiveness}
+    \begin{itemize}
+        \item SVMs with kernels can represent any boolean function (for appropriate choice of kernel).
+        \item SVMs with kernels can represent any sufficiently ``smooth'' function to arbitrary accuracy (for appropriate choice of kernel).
+    \end{itemize}
+    \item \textbf{Computational}
+    \begin{itemize}
+        \item Objective function has no local optima (only one global optimum).
+        \item Independent of dimensionality of feature space.
+    \end{itemize}
+    \item \textbf{Generalization Error}
+    \begin{itemize}
+        \item Low leave-one-out error if dual solution is sparse.
+        \item Low leave-one-out error if $\frac{R^2}{\gamma^2}$ is small.
+    \end{itemize}
+    \item \textbf{Design decisions}
+    \begin{itemize}
+        \item Kernel type and parameters.
+        \item Value of $C$.
+    \end{itemize}
+\end{itemize}

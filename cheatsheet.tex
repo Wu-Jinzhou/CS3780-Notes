@@ -1,0 +1,120 @@
+\documentclass[10pt]{article}
+\usepackage[margin=0.5in]{geometry}
+\usepackage{multicol}
+\usepackage{amsmath, amssymb}
+\usepackage{enumitem}
+\setlist{nosep}
+\pagestyle{empty}
+
+\begin{document}
+
+\begin{center}
+    % \Large \textbf{Exam Cheat Sheet} \\
+    \normalsize CS3780 \hfill \today
+\end{center}
+
+\vspace{-1em}
+\hrule
+\vspace{0.5em}
+
+\begin{multicols}{2}
+
+\subsubsection*{Supervised Learning \& KNN}
+\begin{itemize}
+    \item Training set $S=\{(x_i,y_i)\}_{i=1}^m$ sampled i.i.d.\ from $\mathcal{D}$; learn $h:\mathcal{X}\rightarrow\mathcal{Y}$ that approximates $f$ on unseen $x$.
+    \item $k$-NN (classification): for query $x'$ pick $k$ nearest neighbors under a similarity (e.g.\ Euclidean, Gaussian $e^{-\|x-x'\|^2/2}$, Laplace, cosine) and predict $\hat{y}=\arg\max_y\sum_{i\in\mathrm{knn}(x')} \mathbf{1}(y_i=y)$.
+    \item Weighted $k$-NN: weight counts by similarity; regression outputs $\displaystyle h(x')=\frac{\sum_{i\in\mathrm{knn}(x')} y_i K(x_i,x')}{\sum_{i\in\mathrm{knn}(x')} K(x_i,x')}$.
+    \item Non-parametric, stores all of $S$; query cost scales with $m$ and $d$. Small $k$ $\Rightarrow$ low bias/high variance, large $k$ $\Rightarrow$ smoother but biased. Struggles under the curse of dimensionality.
+\end{itemize}
+
+\subsubsection*{Decision Trees \& Hypothesis Search}
+\begin{itemize}
+    \item \textbf{Version Space:} $VS=\{h\in H \mid h(x_i)=y_i\ \forall(x_i,y_i)\in S\}$; list-then-eliminate removes inconsistent hypotheses sequentially.
+    \item \textbf{IDT (top-down induction):} if $S$ pure $\Rightarrow$ leaf; if no features $\Rightarrow$ majority leaf; else choose split attribute $A$, partition $\{S_v\}$, recurse on each branch.
+    \item \textbf{Error split score:} $\text{Err}(S)=\min(\#\text{pos},\#\text{neg}),\quad \Delta \text{Err}=\text{Err}(S)-\sum_v \text{Err}(S_v)$.
+    \item Trees memorise training data when unconstrained. Control complexity via depth limits, early stopping (min gain / min samples), or post-pruning.
+    \item Leaves output majority label along the path; structure is easy to interpret and handles categorical or numeric tests.
+\end{itemize}
+
+\subsubsection*{Bias, Variance, \& Overfitting}
+\[
+\mathbb{E}[\text{Err}] = \underbrace{\text{Bias}^2}_{\text{model assumptions}} + \underbrace{\text{Variance}}_{\text{sensitivity to }S} + \underbrace{\sigma^2}_{\text{noise}}
+\]
+\begin{itemize}
+    \item Empirical error $\hat{L}_S(h)=\frac{1}{|S|}\sum \mathbf{1}[h(x_i)\neq y_i]$; prediction error $L_{\mathcal{D}}(h)=\mathbb{P}_{(x,y)\sim\mathcal{D}}[h(x)\neq y]$.
+    \item Overfitting: zero train error but large test error (e.g.\ memorising training points and guessing otherwise).
+    \item Bias $\uparrow$ with simple hypothesis spaces (risk of underfitting); variance $\uparrow$ with overly flexible models. Choose intermediate complexity or add regularization.
+\end{itemize}
+
+\subsubsection*{Model Assessment}
+\begin{itemize}
+    \item \textbf{$k$-fold cross-validation:} split $S$ into $k$ folds $S_i$; for each hyperparameter $p$, train $h_i=A_p(S\setminus S_i)$, compute $err_{S_i}(h_i)$, average $err_{CV}(A_p)=\frac{1}{k}\sum_i err_{S_i}(h_i)$, pick $p^*$ with smallest error, retrain on full $S$.
+    \item \textbf{Binomial significance test:} under $H_0:err_P(h)\ge \epsilon$, number of observed errors $K\sim\text{Binomial}(m,\epsilon)$. Compute $p$-value $P(K\le k)$ (or $\ge k$). Reject $H_0$ if $p<\alpha$ (two-sided tests split $\alpha$ across tails).
+    \item \textbf{Normal CI:} when $mp(1-p)\ge5$, $err_P(h)\in \left[err_S(h)\pm1.96\sqrt{\frac{p(1-p)}{m}}\right]$ with $p\approx err_S(h)$.
+    \item \textbf{Hoeffding bound:} with prob.\ $\ge 1-\delta$, $err_P(h)\in\left[err_S(h)\pm\sqrt{\frac{-0.5\ln(\delta/2)}{m}}\right]$ for losses in $[0,1]$.
+    \item \textbf{McNemar's test:} compare $h_1,h_2$ by wins $w$ (only $h_1$ correct) and losses $l$ (only $h_2$ correct); under $H_0$ wins $\sim \text{Binomial}(w+l,0.5)$. Reject at 95\% if $P(W\le w)$ or $P(W\ge w)$ is $<0.025$.
+\end{itemize}
+
+\subsubsection*{Linear Classifiers}
+\begin{itemize}
+    \item Hyperplane: $\{\vec{x}\mid \vec{w}\cdot\vec{x}+b=0\}$ with normal vector $\vec{w}$; classifier $h_{\vec{w},b}(x)=\mathrm{sign}(\vec{w}\cdot x + b)$.
+    \item Homogeneous form: append bias as extra coordinate $x'=(x,1)$, $w'=(w,b)$ so $\vec{w}'\cdot \vec{x}'=\vec{w}\cdot\vec{x}+b$.
+    \item Functional margin of $(x_i,y_i)$: $\gamma_i=y_i(\vec{w}\cdot x_i + b)$; geometric margin assumes $\|\vec{w}\|=1$ so $\gamma_i$ equals signed distance. Dataset margin $\gamma=\min_i \gamma_i$.
+    \item Larger margins $\Rightarrow$ easier separability and tighter generalization bounds.
+\end{itemize}
+
+\subsubsection*{Perceptron}
+\begin{itemize}
+    \item \textbf{Batch homogeneous algorithm:} start $\vec{w}^{(0)}=\vec{0}$; while some $i$ has $y_i(\vec{w}^{(t)}\cdot x_i)\le0$, update $\vec{w}^{(t+1)}=\vec{w}^{(t)}+y_i x_i$. Shuffle data; stop when no errors or after max epochs.
+    \item \textbf{Convergence theorem:} if $\|x_i\|\le R$ and data separable with margin $\gamma$, Perceptron makes $\le R^2/\gamma^2$ updates (independent of unknown $\gamma$). Scaling examples or reordering does not change the bound.
+\end{itemize}
+
+\subsubsection*{Support Vector Machines}
+\begin{itemize}
+    \item Hard-margin SVM: $\displaystyle \min_{\vec{w},b}\frac{1}{2}\|\vec{w}\|^2\ \text{s.t.}\ y_i(\vec{w}\cdot x_i + b)\ge 1$. Maximizes geometric margin $1/\|\vec{w}\|$ while keeping zero training error; support vectors satisfy equality.
+    \item Soft-margin SVM introduces slack $\xi_i\ge0$: $\displaystyle \min_{\vec{w},b,\xi}\frac{1}{2}\|\vec{w}\|^2 + C\sum_i \xi_i$ with constraints $y_i(\vec{w}\cdot x_i + b)\ge 1-\xi_i$. $\xi_i=0$ correct with margin, $0<\xi_i<1$ inside margin, $\xi_i\ge1$ misclassified. $C$ trades margin size vs.\ training errors; only points with margin $\le1$ influence $\vec{w}$.
+    \[
+        \min_{\vec{w}, b, \vec{\xi}} \frac{1}{2} \vec{w} \cdot \vec{w} + C \sum_{i=1}^n \xi_i
+    \]
+    \[
+        \text{s.t.} \quad y_i(\vec{w} \cdot \vec{x}_i + b) \geq 1 - \xi_i, \quad \xi_i \geq 0 \quad \forall i
+    \]
+    \item \textbf{Slack variable} $\xi_i$ measures how much $(x_i, y_i)$ fails to achieve the margin.
+    \begin{itemize}
+        \item \textbf{Idea:} Slack variables $\xi_i$ capture training error.
+        \item For any training example $(\vec{x}_i, y_i)$:
+        \begin{itemize}
+            \item $\xi_i \geq 1 \iff y_i(\vec{w} \cdot \vec{x}_i + b) \leq 0$ (error)
+            \item $0 < \xi_i < 1 \iff 0 < y_i(\vec{w} \cdot \vec{x}_i + b) < 1$ (correct, but within margin)
+            \item $\xi_i = 0 \iff y_i(\vec{w} \cdot \vec{x}_i + b) \geq 1$ (correct)
+        \end{itemize}
+        \item The sum $\sum_i \xi_i$ is an upper bound on the number of training errors.
+        \item $C$ controls the trade-off between margin size and training error.
+    \end{itemize}
+    \item Examples with margin less than or equal to 1 are support vectors.
+\end{itemize}
+
+\subsubsection*{Duality \& Kernels}
+\begin{itemize}
+    \item \textbf{Perceptron dual:} represent $\vec{w}=\sum_j \alpha_j y_j x_j$; update $\alpha_i \leftarrow \alpha_i+1$ when $y_i\sum_j \alpha_j y_j(x_j\cdot x_i)\le0$. Prediction $\mathrm{sign}\left(\sum_j \alpha_j y_j (x_j\cdot x)\right)$.
+    \item \textbf{SVM dual:} maximize $\displaystyle D(\alpha)=\sum_i \alpha_i-\frac{1}{2}\sum_{ij} y_i y_j \alpha_i \alpha_j (x_i\cdot x_j)$ subject to $\sum_i y_i\alpha_i=0$, $0\le \alpha_i\le C$; optimal $\vec{w}=\sum_i \alpha_i y_i x_i$ and $P^*=D^*$.
+    \item \textbf{Kernel trick:} replace dot products by $K(x,z)=\Phi(x)\cdot\Phi(z)$ to work in high-dimensional feature spaces without explicit $\Phi$. Common kernels: linear $x\cdot z$, polynomial $(x\cdot z+1)^k$, RBF $e^{-\gamma\|x-z\|^2}$, sigmoid $\tanh(\gamma x\cdot z + c)$.
+    \item Valid kernel $\Rightarrow$ Gram matrix $G_{ij}=K(x_i,x_j)$ is symmetric positive semi-definite; closure: non-negative sums, products, $f(x)f(z)$, compositions with feature maps, and $x^\top K z$ for PSD $K$.
+    \item Leave-one-out for SVM: $err_{loo}\le \#SV/m$ and for homogeneous hard-margin also $\le R^2/(\gamma^2 m)$.
+\end{itemize}
+
+\subsubsection*{Regularized Linear Models}
+\begin{itemize}
+    \item \textbf{ERM:} choose hypothesis space $\mathcal{H}$ and minimize empirical loss; avoid overfitting via regularization or validation.
+    \item \textbf{Bayes decision rule (0/1 loss):} $h_{\text{Bayes}}(x)=\arg\max_y P(Y=y\mid X=x)$ with minimum risk $\mathbb{E}_x[1-\max_y P(Y=y\mid x)]$.
+    \item \textbf{Logistic regression:} $P(y_i\mid x_i,w)=\sigma(y_i w\cdot x_i)$, $\sigma(z)=1/(1+e^{-z})$; $\sigma(-z)=1-\sigma(z)$. MLE minimizes $\sum_i\ln(1+e^{-y_i w\cdot x_i})$. Separable data drive $\|w\|\rightarrow\infty$.
+    \item \textbf{$\ell_2$-regularized logistic (MAP with $w\sim\mathcal{N}(0,\sigma^2I)$):} minimize $\frac{\lambda}{2}\|w\|_2^2+\sum_i\ln(1+e^{-y_i w\cdot x_i})$ with $\lambda=1/\sigma^2$.
+    \item \textbf{Linear regression:} assume $Y_i\mid x_i,w\sim\mathcal{N}(w\cdot x_i,\eta^2)$; MLE $\Leftrightarrow$ minimize $\sum_i (w\cdot x_i - y_i)^2$. Prediction is $w\cdot x$.
+    \item \textbf{Ridge regression (Gaussian prior):} minimize $\frac{1}{2}\|w\|_2^2 + C\sum_i (w\cdot x_i - y_i)^2$ with $C=\sigma^2/(2\eta^2)$.
+    \item \textbf{Unified template:} $\min_w R(w)+C\sum_i L(w\cdot x_i,y_i)$. Examples: SVM ($R=\tfrac{1}{2}\|w\|^2$, $L=\max(0,1-y\hat{y})$), Perceptron ($R=0$, $L=\max(0,-y\hat{y})$), Logistic Regression ($R=\tfrac{1}{2}\|w\|^2$, $L=\ln(1+e^{-y\hat{y}})$), Linear Regression ($R=0$, $L=(y-\hat{y})^2$), Ridge ($R=\tfrac{1}{2}\|w\|^2$, $L=(y-\hat{y})^2$), Lasso ($R=\lambda\sum_j |w_j|$, $L=(y-\hat{y})^2$).
+\end{itemize}
+
+\end{multicols}
+
+\end{document}
+
