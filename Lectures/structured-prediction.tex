@@ -1,0 +1,57 @@
+\section{Structured Prediction}
+
+\subsection{Predicting Structured Outputs}
+In structured prediction, the output $y$ is a complex object rather than a single label/number, e.g.
+\begin{itemize}
+    \item Multi-label classification (predict a set of labels)
+    \item Speech transcription (predict a sentence)
+    \item Semantic segmentation (predict a label for each pixel)
+    \item Part-of-speech (POS) tagging (predict a tag sequence)
+\end{itemize}
+
+\subsection{Supervised Structured Prediction}
+We are given data $S=\{(x_i,y_i)\}_{i=1}^m$ where $y_i\in\mathcal{Y}$ is structured and a loss $\Delta(y,\hat{y})$.
+The Bayes decision rule for $0/1$ loss is
+\[
+h(x)=\arg\max_{y\in\mathcal{Y}} P(x,y) = \arg\max_{y\in\mathcal{Y}} P(y\mid x).
+\]
+
+\subsection{Hidden Markov Models (HMMs) for Sequence Labeling}
+For a sequence $x=(x_1,\dots,x_T)$ and tags $y=(y_1,\dots,y_T)$:
+\begin{itemize}
+    \item \textbf{Start probabilities:} $P(y_1)$
+    \item \textbf{Transitions:} $P(y_t\mid y_{t-1})$ (Markov assumption)
+    \item \textbf{Emissions:} $P(x_t\mid y_t)$
+\end{itemize}
+The joint distribution factorizes as
+\[
+P(x,y)=P(y_1)P(x_1\mid y_1)\prod_{t=2}^T P(y_t\mid y_{t-1})P(x_t\mid y_t).
+\]
+
+\subsection{Estimating HMM Parameters}
+Using maximum likelihood from labeled sequences:
+\begin{itemize}
+    \item $P(y_1=s)=\dfrac{\#\text{ sequences starting in }s}{\#\text{ sequences}}$
+    \item $P(y_t=s\mid y_{t-1}=s')=\dfrac{\#(s'\to s)}{\#(s'\text{ occurs})}$
+    \item $P(x_t=o\mid y_t=s)=\dfrac{\#(o \text{ emitted in } s)}{\#(s\text{ occurs})}$
+\end{itemize}
+Smoothing (as in Naive Bayes) is often needed.
+
+\subsection{Inference: The Viterbi Algorithm}
+We want the most likely tag sequence:
+\[
+\hat{y}=\arg\max_{y\in\mathcal{Y}} P(x,y).
+\]
+Brute force search is exponential in $T$. Viterbi uses dynamic programming.
+In log-space, define:
+\[
+\delta_1(s)=\log P(y_1=s)+\log P(x_1\mid y_1=s),
+\]
+\[
+\delta_t(s)=\log P(x_t\mid y_t=s)+\max_{s'}\left[\delta_{t-1}(s')+\log P(y_t=s\mid y_{t-1}=s')\right].
+\]
+Track backpointers to recover the maximizing sequence.
+The runtime is $O(T|S|^2)$ where $|S|$ is the number of states/tags.
+
+\subsection{Beyond Sequences}
+More general structured prediction includes graph labeling problems (e.g.\ Markov random fields), where inference can be more complex than the chain-structured Viterbi case.

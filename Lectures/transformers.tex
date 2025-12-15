@@ -1,0 +1,102 @@
+\section{Attention and Transformers}
+
+\subsection{Text as Sequences}
+Neural networks operate on vectors, so we first convert text into a sequence of vectors:
+\begin{itemize}
+    \item \textbf{Tokenize:} $x = (x_1,\dots,x_n)$ where each $x_i \in \mathcal{V}$ is a token from a vocabulary $\mathcal{V}$.
+    \item \textbf{Embed:} an embedding table $E \in \mathbb{R}^{|\mathcal{V}|\times d}$ maps each token to a vector $z_i = E[x_i] \in \mathbb{R}^d$.
+    \item Collect embeddings into a matrix $Z \in \mathbb{R}^{n\times d}$ where row $i$ is $z_i^\top$.
+\end{itemize}
+
+\subsection{Attention}
+\paragraph{Key--Value View}
+Attention can be viewed as fuzzy lookup in a key--value store:
+\begin{itemize}
+    \item A \textbf{query} is matched against all \textbf{keys}.
+    \item Similarities are normalized into weights (via softmax).
+    \item The output is a weighted average of the corresponding \textbf{values}.
+\end{itemize}
+
+\subsection{Self-Attention}
+
+\begin{center}
+    \includegraphics[width=0.8\textwidth]{Images/self_attention.png}
+\end{center}
+
+In \textbf{self-attention}, queries/keys/values are all computed from the same sequence representation $Z$.
+Let
+\[
+Q = ZW_Q,\quad K = ZW_K,\quad V = ZW_V
+\]
+where $W_Q, W_K \in \mathbb{R}^{d\times d_k}$, $W_V \in \mathbb{R}^{d\times d_v}$, and $Z$ is the concatenation of the input embeddings.
+
+\begin{itemize}
+    \item Each word forms a \textbf{query} (Q) to ask what information it needs from the rest of the sequence.
+    \item All words provide \textbf{keys} (K) describing what information they offer, and \textbf{values} (V) containing the content to share.
+    \item Self-attention computes how well each query matches each key, then blends the values accordingly, letting each word build a context-aware representation from the whole sequence.
+\end{itemize}
+
+\paragraph{Scaled Dot-Product Attention}
+\[
+\mathrm{Attn}(Q,K,V) = \mathrm{softmax}\!\left(\frac{QK^\top}{\sqrt{d_k}}\right)V
+\]
+The softmax is applied row-wise so each position attends to all positions in the sequence.
+
+\subsection{Positional Embeddings}
+Self-attention is permutation-invariant in its inputs, so we must represent order.
+Standard practice: add a learned (or fixed) position vector $p_i \in \mathbb{R}^d$ to each token embedding:
+\[
+\tilde{z}_i = z_i + p_i.
+\]
+
+\subsection{Multi-Head Self-Attention}
+Rather than computing a single attention operation in the full $d$-dimensional space, multi-head self-attention uses $H$ parallel attention heads, each operating in a learned $d/H$-dimensional subspace.
+
+\begin{itemize}
+    \item For each head $h$, the full $d$-dimensional input embeddings are linearly projected into queries, keys, and values:
+$
+    Q^{(h)} = X W_Q^{(h)},
+    K^{(h)} = X W_K^{(h)},
+    V^{(h)} = X W_V^{(h)},
+    W_Q^{(h)}, W_K^{(h)}, W_V^{(h)} \in \mathbb{R}^{d \times d/H}.
+$
+    \item Each head computes self-attention independently in its projected subspace:
+    \[
+    O^{(h)} = \mathrm{Attn}(Q^{(h)}, K^{(h)}, V^{(h)}) \in \mathbb{R}^{n \times d/H}.
+    \]
+    \item The head outputs are concatenated and mixed with an output projection:
+    \[
+    O = \mathrm{Concat}(O^{(1)}, \dots, O^{(H)}) W_O,
+    \quad W_O \in \mathbb{R}^{d \times d}.
+    \]
+\end{itemize}
+
+
+\subsection{Transformer Blocks}
+The \textbf{Transformer} is a stack of $L$ blocks. Each block contains:
+\begin{enumerate}
+    \item Multi-headed self-attention
+    \item Residual connection + LayerNorm
+    \item Position-wise feed-forward network (FFN): two linear layers with ReLU in between, applied independently to each position: $\mathrm{FFN}(x) = \mathrm{ReLU}(xW_1 + b_1)W_2 + b_2$
+    \item Residual connection + LayerNorm
+\end{enumerate}
+
+\paragraph{Residual Connections}
+Residual connections stabilize deep networks by letting layers learn perturbations: $x \mapsto x + \mathrm{Layer}(x)$.
+
+\paragraph{Layer Normalization}
+LayerNorm normalizes each hidden vector to reduce variance across coordinates: 
+$\mathrm{LayerNorm}(x) = \frac{x - \mu}{\sigma} \cdot \gamma + \beta,\quad \text{where } \mu = \frac{1}{d}\sum_{i=1}^d x_i,\ \sigma = \sqrt{\frac{1}{d}\sum_{i=1}^d (x_i - \mu)^2}$
+
+\subsection{Common Hyperparameters}
+\begin{multicols}{2}
+\begin{itemize}
+    \item Model/hidden width $d$
+    \item FFN width $m$
+    \item Head dimension $d_k$ (and $d_v$)
+    \item Number of heads $H$
+    \item Depth $L$
+    \item Context length $n$
+    \item Optimizer, learning rate schedule, regularization, etc.
+\end{itemize}
+\end{multicols}

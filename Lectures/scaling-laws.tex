@@ -1,0 +1,80 @@
+\section{Scaling Laws}
+
+\subsection{Motivation}
+Training large-scale models involves many design choices (architecture, depth/width, optimizer, batch size, dataset size, etc.).
+\textbf{Scaling laws} are simple, predictive rules for model performance that let us:
+\begin{itemize}
+    \item Tune on small runs and extrapolate to large runs.
+    \item Compare configurations under fixed compute budgets.
+    \item Plan data/compute requirements for a target performance level.
+\end{itemize}
+
+\subsection{Data Scaling Laws}
+A \textbf{data scaling law} is a formula to predict error based on dataset size. Typically, we expect:
+
+\begin{itemize}
+    \item \textbf{Monotone, logistic-like curves:} As dataset size increases, error decreases in a predictable way.
+    \item \textbf{Power-law decay:} In the main regime, error decreases as a power of dataset size:
+    \[
+        \mathrm{Error} = \Theta\left(\frac{1}{n^\alpha}\right)
+    \]
+    or equivalently,
+    \[
+        \log(\mathrm{Error}) = -\alpha \log(n)
+    \]
+    where $n$ is the dataset size and $\alpha$ is the scaling exponent.
+    \item \textbf{Regions:} For small datasets, error may plateau (small data region). For large datasets, error approaches an irreducible minimum (irreducible error region).
+\end{itemize}
+
+\paragraph{Estimating the Slope}
+Estimate $\alpha$ by fitting a line to $(\log n,\log \mathrm{Error}(n))$ across runs, e.g. via least squares.
+
+\subsection{Toy Example: Estimating a Mean}
+Suppose $x_1, \ldots, x_n \sim \mathcal{N}(\mu, \sigma^2)$ are i.i.d. samples. We estimate the mean by
+\[
+    \hat{\mu} = \frac{1}{n} \sum_{i=1}^n x_i
+\]
+The mean squared error of this estimator is:
+\[
+    \mathbb{E}\left[ \|\hat{\mu} - \mu\|^2 \right] = \mathrm{Var}[\hat{\mu}] = \mathrm{Var}\left( \frac{1}{n} \sum_{i=1}^n x_i \right)
+    = \frac{1}{n^2} \sum_{i=1}^n \mathrm{Var}[x_i] = \frac{\sigma^2}{n}
+\]
+
+Taking logs:
+\[
+    \log(\mathrm{Error}) = \log(\sigma^2) - \log(n)
+\]
+So, plotting $\log(\mathrm{Error})$ vs. $\log(n)$ yields a straight line with slope $-1$. In general, for power-law scaling $\mathrm{Error} \sim n^{-\alpha}$, the slope is $-\alpha$ in log-log scale.
+
+\subsection{Engineering with Scaling Laws}
+Once a scaling law is fit, it can be used to:
+\begin{itemize}
+    \item Predict the performance of a larger run.
+    \item Decide whether it is worth collecting more data.
+    \item Decide which ablations/hyperparameter searches are most informative under limited compute.
+\end{itemize}
+
+\subsection{Model/Compute Scaling}
+Scaling laws can also compare architecture choices (e.g. depth), optimizer choices, and batch sizes by fitting performance as a function of:
+\begin{itemize}
+    \item \textbf{Parameters} (model size)
+    \item \textbf{Dataset size}
+    \item \textbf{Training compute}
+\end{itemize}
+
+Scaling may have diminishing returns past a certain point (perfect scaling vs. ineffective scaling).
+
+\paragraph{Compute Tradeoffs}
+For a fixed compute budget, we often face tradeoffs between model size and data size.
+Scaling laws help navigate these tradeoffs, but can be difficult to compute correctly.
+
+\subsection{Cautions}
+\begin{itemize}
+    \item Early scaling-law fits can be wrong when extrapolated (famously, early OpenAI scaling laws were later revised).
+    \item For a fixed training compute budget, the optimal model is smaller and trained on much more data (about 20 tokens per parameter). Older models like GPT-3 were undertrained by this standard.
+    \item In practice, most compute is spent on inference (serving), not training. Inference cost scales with model size and tokens served.
+    \item Modern models are trained with far more tokens per parameter than Chinchilla-optimal (e.g., LLaMA 3: 215, Mistral 7B: 110), meaning they are ``overtrained'' relative to the training-optimal regime.
+    \item Overtraining (high tokens/param) increases upfront training cost but allows for much smaller models, reducing inference cost per token at scale.
+    \item If a model will be used heavily, it is rational to pay more for training to save on long-term inference costs. For low-usage models, Chinchilla-optimal training is more cost-effective.
+    \item Chinchilla is optimal if only training compute matters, but when inference dominates, overtraining smaller models is preferred for lower total cost.
+\end{itemize}

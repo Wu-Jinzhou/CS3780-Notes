@@ -1,0 +1,47 @@
+\section{Language Modeling and LLMs}
+
+\subsection{Autoregressive Modeling}
+Tokenize data into a sequence $x=(x_1,\dots,x_T)$ with $x_t\in\mathcal{V}$.
+An autoregressive model factorizes the joint distribution:
+\[
+p(x)=\prod_{t=1}^T p(x_t\mid x_{<t}).
+\]
+
+\subsection{Next-Token Prediction}
+Training learns a conditional model $\hat{p}_\theta(x_t\mid x_{<t})$ by maximizing conditional likelihood over a corpus.
+At inference time, generation samples iteratively:
+\[
+\hat{x}_t \sim \hat{p}_\theta(\cdot \mid \hat{x}_{<t}).
+\]
+
+\subsection{Transformer Language Models}
+Modern LLMs are typically \textbf{decoder-only} Transformers:
+\begin{itemize}
+    \item Embed tokens into vectors.
+    \item Apply stacked Transformer blocks.
+    \item Use a linear projection + softmax head to produce $\hat{p}_\theta(\cdot\mid x_{<t})$.
+    \item Use a \textbf{causal mask} so position $t$ cannot attend to future tokens.
+\end{itemize}
+
+\subsection{Training Details}
+\paragraph{Shifted Targets}
+Predict the next token: inputs are $(x_1,\dots,x_{T-1})$, labels are $(x_2,\dots,x_T)$.
+
+\paragraph{Sequence Packing}
+To create fixed-length training sequences:
+\begin{itemize}
+    \item Concatenate documents into one long token stream.
+    \item Insert a special separator token between documents.
+    \item Cut the stream into segments of length $T$ (the \textbf{context length}).
+\end{itemize}
+
+\subsection{Prompts and Post-Training}
+Many tasks can be solved by prompting: choose a prefix so that the likely continuation is the answer.
+In practice, post-training (supervised fine-tuning, RLHF, etc.) improves instruction-following and usability.
+
+\subsection{Exposure Bias}
+During generation, the model conditions on its own sampled tokens, which may differ from the training distribution.
+This distribution shift is called \textbf{exposure bias}.
+
+\subsection{Generalized Next-Token Prediction}
+Autoregressive modeling can be applied to other modalities by tokenizing into discrete sequences (e.g.\ discretized image/audio patches), then training the same next-token objective.

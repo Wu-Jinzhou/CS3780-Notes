@@ -1,0 +1,31 @@
+\section{Anticipation and Music Language Models}
+
+\subsection{Control and Controllable Generation}
+Modern generative models can be turned into tools by conditioning on user-specified controls (classes, text prompts, melodies, beginnings/endings, etc.).
+
+\subsection{Symbolic Music as a Temporal Point Process}
+Symbolic music can be represented as a sequence of events with stochastic arrival times:
+\[
+e_i = (\text{time}_i,\text{note}_i).
+\]
+This is a \textbf{temporal point process}: events arrive over time with content.
+
+\subsection{Controllable Generation}
+We may want to condition on control signals (e.g.\ melody, beginning, ending) and generate missing portions.
+The key question is: \textbf{how to serialize events and controls} into a sequence for autoregressive modeling.
+
+\subsection{Stopping Times and Anticipation}
+If controls do not appear at \emph{stopping times} (times identifiable when they occur), naive interleavings can prevent the model from planning based on upcoming controls.
+The lecture introduces an \textbf{anticipatory order} to ensure the serialization corresponds to stopping times, enabling the model to anticipate future controls while generating.
+
+\subsection{Anticipatory Music Transformer (AMT)}
+AMT uses GPT-2-style decoder-only Transformers (causal masking) to model serialized symbolic music with controls.
+Lecture details:
+\begin{itemize}
+    \item Model scales: 128M / 360M / 780M parameters (GPT-2 blueprint).
+    \item Training data: Lakh MIDI (176{,}581 MIDI files; large event/token corpus via event tokenization).
+    \item Compute: training on TPU v3-32 resources.
+\end{itemize}
+
+\subsection{Looking Forward}
+Generative models for music outpace user interfaces; key questions involve giving users meaningful agency in creative workflows rather than full automation.

@@ -1,0 +1,68 @@
+\section{Clustering}
+
+\subsection{Unsupervised Learning}
+In unsupervised learning, we are given unlabeled data $\{x_i\}_{i=1}^n$ and aim to discover structure.
+\textbf{Clustering} partitions examples into groups such that:
+\begin{itemize}
+    \item points within a cluster are similar,
+    \item points across clusters are dissimilar.
+\end{itemize}
+
+\subsection{Similarity Measures}
+Common similarity/distance measures include:
+\begin{itemize}
+    \item \textbf{Euclidean distance:} $\|x-x'\|_2$
+    \item \textbf{$\ell_1$ distance:} $\|x-x'\|_1$
+    \item \textbf{Cosine similarity:} $\dfrac{x\cdot x'}{\|x\|\,\|x'\|}$
+\end{itemize}
+
+\subsection{K-means Clustering}
+\paragraph{Objective}
+Assign each point to one of $K$ clusters with centroids $\mu_1,\dots,\mu_K$.
+Let $r(i)\in\{1,\dots,K\}$ be the cluster assignment of $x_i$.
+The $K$-means objective is:
+\[
+\min_{\{\mu_k\},\,r}\; \sum_{i=1}^n \left\|x_i - \mu_{r(i)}\right\|_2^2.
+\]
+
+\paragraph{Alternating Minimization}
+\begin{itemize}
+    \item \textbf{Assignment step:} with fixed centroids, set $r(i)=\arg\min_k \|x_i-\mu_k\|_2$.
+    \item \textbf{Centroid step:} with fixed assignments, set $\mu_k$ to the mean of points assigned to cluster $k$.
+\end{itemize}
+These steps monotonically decrease the objective but can get stuck in local minima.
+
+\begin{algobox}
+\textbf{K-means (Lloyd's Algorithm):}
+\begin{enumerate}
+    \item Initialize centroids $\mu_1,\dots,\mu_K$ (e.g.\ randomly).
+    \item Repeat until convergence:
+    \begin{itemize}
+        \item Assign each $x_i$ to its nearest centroid.
+        \item Update each centroid to the mean of its assigned points.
+    \end{itemize}
+\end{enumerate}
+\end{algobox}
+
+\subsection{Generative Clustering: Gaussian Mixture Models (GMMs)}
+Instead of hard cluster assignments, a GMM models data as a mixture:
+\[
+p(x)=\sum_{k=1}^K \pi_k\,\mathcal{N}(x\mid \mu_k,\Sigma_k),
+\qquad \sum_{k=1}^K \pi_k = 1,\;\pi_k\ge 0.
+\]
+
+\subsection{Expectation--Maximization (EM) for GMMs}
+EM alternates between:
+\begin{itemize}
+    \item \textbf{E-step:} compute responsibilities (soft assignments)
+    \[
+    \gamma_{ik} = P(z_i=k\mid x_i)=\frac{\pi_k\mathcal{N}(x_i\mid \mu_k,\Sigma_k)}{\sum_{j=1}^K \pi_j\mathcal{N}(x_i\mid \mu_j,\Sigma_j)}.
+    \]
+    \item \textbf{M-step:} update parameters using weighted averages:
+    \[
+    \pi_k \leftarrow \frac{1}{n}\sum_{i=1}^n \gamma_{ik},
+    \qquad
+    \mu_k \leftarrow \frac{\sum_{i=1}^n \gamma_{ik}x_i}{\sum_{i=1}^n \gamma_{ik}},
+    \]
+    and similarly update $\Sigma_k$.
+\end{itemize}

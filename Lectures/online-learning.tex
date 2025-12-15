@@ -1,0 +1,90 @@
+\section{Online Learning}
+
+\subsection{Online Classification Model}
+We receive examples sequentially and update a hypothesis after each round:
+\begin{itemize}
+    \item For $t=1,\dots,T$:
+    \begin{enumerate}
+        \item Receive $x_t$
+        \item Predict $\hat{y}_t = h_t(x_t)$
+        \item Observe true label $y_t$
+        \item Update $h_{t+1}$ based on $(x_t,y_t)$
+    \end{enumerate}
+\end{itemize}
+
+\subsection{Online Perceptron}
+Initialize $w=\vec{0}$ and iterate:
+\[
+\hat{y}_t = \mathrm{sign}(w\cdot x_t),\qquad
+\text{if } y_t(w\cdot x_t)\le 0 \text{ then } w \leftarrow w + y_t x_t.
+\]
+\begin{theorem}
+If $\|x_t\|\le R$ for all $t$ and there exists a unit vector $w^\star$ with margin $y_i(w^\star \cdot x_i) \gamma>0$ such that $y_t(w^\star\cdot x_t)\ge \gamma$ for all $t$, then the online perceptron makes at most $(R/\gamma)^2$ mistakes.
+\end{theorem}
+
+\subsection{Expert Learning and Regret}
+We have $N$ experts $H=\{h_1,\dots,h_N\}$. In each round $t$:
+\begin{itemize}
+    \item Expert $i$ incurs loss $\Delta_{t,i}$.
+    \item The algorithm selects an expert (possibly randomly) and incurs corresponding loss.
+\end{itemize}
+
+\paragraph{Regret}
+Let the cumulative loss of expert $i$ be $L_i=\sum_{t=1}^T \Delta_{t,i}$ and the algorithm's cumulative loss be $L_A$.
+The (static) regret is
+\[
+\mathrm{Regret}(T) = L_A - \min_{i\in[N]} L_i.
+\]
+
+\subsection{Halving Algorithm (Realizable Expert Setting)}
+Assume there exists a perfect expert with zero mistakes.
+Maintain a \textbf{version space} $V_t\subseteq H$ of experts consistent so far and predict by majority vote over $V_t$.
+Whenever the algorithm makes a mistake, remove all experts in $V_t$ that predicted incorrectly.
+\begin{theorem}
+If a perfect expert exists, the Halving algorithm makes at most $\log_2 N$ mistakes.
+\end{theorem}
+
+\subsection{Weighted Majority Algorithm}
+Initialize weights $w_1(i)=1$ for all experts and choose a penalty factor $\beta\in(0,1)$.
+At time $t$, predict by weighted majority vote. After observing losses, downweight incorrect experts:
+\[
+w_{t+1}(i) =
+\begin{cases}
+\beta\, w_t(i) & \text{if expert $i$ is incorrect at time $t$}\\
+w_t(i) & \text{otherwise.}
+\end{cases}
+\]
+\begin{theorem}
+For $\beta=\tfrac12$, the Weighted Majority algorithm makes at most
+\[
+M_{\mathrm{WM}} \le 2.4\left(M^\star + \log_2 N\right)
+\]
+mistakes, where $M^\star$ is the number of mistakes of the best expert in hindsight.
+\end{theorem}
+
+\begin{proof}
+Let $W_t=\sum_{i=1}^N w_t(i)$ be the total weight at time $t$.
+Initially, $W_1=N$.
+Each mistake reduces the total weight by at least a factor of $\frac{3}{4}$ because at least half the weight is on incorrect experts (since the algorithm predicts incorrectly by weighted majority), and those weights are multiplied by $\frac{1}{2}$:
+\[
+W_{t+1} \le \frac{1}{2} \cdot \frac{W_t}{2} + \frac{W_t}{2} = \frac{3}{4} W_t.
+\]
+Thus, after $M_{\mathrm{WM}}$ mistakes, the total weight satisfies
+\[W_{T+1} \le N\left(\frac{3}{4}\right)^{M_{\mathrm{WM}}}.\]
+On the other hand, the weight of the best expert after $T$ rounds is at least
+\[w_{T+1}(i^\star) = \left(\frac{1}{2}\right)^{M^\star}.\]
+Combining these,
+\[\left(\frac{1}{2}\right)^{M^\star} \le W_{T+1} \le N\left(\frac{3}{4}\right)^{M_{\mathrm{WM}}}.\]
+Taking logarithms and rearranging gives the desired bound.
+\end{proof}
+
+\subsection{Exponentiated Gradient / Hedge}
+For general bounded losses $\Delta_{t,i}\in[0,1]$, maintain weights and choose a distribution
+\[
+p_t(i)=\frac{w_t(i)}{\sum_{j=1}^N w_t(j)}.
+\]
+Sample an expert according to $p_t$ and update
+\[
+w_{t+1}(i)=w_t(i)\exp(-\eta \Delta_{t,i}).
+\]
+With an appropriate learning rate $\eta$, the expected regret is $O(\sqrt{2 T\log |H|})$, where $\Delta \in [0, 1]$ and $\eta = \sqrt{\frac{2 \log |H|}{T}}$ so average regret vanishes as $T\to\infty$.

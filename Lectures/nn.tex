@@ -1,5 +1,4 @@
 \section{Neural Networks}
-\textbf{Date:} \underline{Oct 2, 2025}
 
 \subsection{Multi-Layer Neural Networks}
 
@@ -99,3 +98,53 @@ A fundamental result in neural networks is the \textbf{Universal Approximation T
     \end{itemize}
     \item Instead of fully connected layers, we can use structured networks (e.g., convolutional neural networks) to reduce the number of parameters and exploit structure in the data.
 \end{itemize}
+
+
+\subsection{Convolutional Neural Networks}
+
+\begin{center}
+\includegraphics[width=0.9\textwidth]{Images/lenet.png}
+\end{center}
+
+If we're using neural networks for image data, for a grayscale (1 channel) image of size $1920 \times 1080$, a fully connected first layer, assuming 1000 hidden units, would require $1920 \times 1080 \times 1000 \approx 2$ billion parameters, which is impractical.
+
+\begin{itemize}
+    \item CNNs are designed to process data with a grid-like topology, such as images.
+    \item Instead of connecting every input pixel to every neuron in the next layer, CNNs use \textbf{local connections} via small filters (kernels) that slide over the input.
+    \item Each filter detects specific features (e.g., edges, textures) by performing a \textbf{convolution} operation.
+    \item The same filter (set of weights) is applied across the entire input, enabling \textbf{weight sharing} and reducing the number of parameters.
+    \item The result of applying a filter is called a \textbf{feature map}.
+    \item Multiple filters are used in each layer to detect different features.
+    \item CNNs typically alternate between convolutional layers, non-linear activation functions, and pooling (downsampling) layers.
+\end{itemize}
+
+\paragraph{Convolutions} Given an $n \times n$ input matrix and an $f \times f$ filter (kernel), the convolution operation produces an $(n-f+1) \times (n-f+1)$ output matrix. Each entry in the output is computed by sliding the filter over the input, multiplying corresponding entries, and summing the results.
+
+\begin{itemize}
+    \item The $(i, j)$-th entry of the output is the sum of pairwise multiplications of the filter and the $f \times f$ submatrix of the input whose top-left entry is at $(i, j)$.
+    \item The filter is applied across the input with a specified \textbf{stride} (how many positions the filter moves at each step; stride 1 means move by 1 entry).
+    \item Convolutions allow for \textbf{local feature extraction} and \textbf{weight sharing} (the same filter is used everywhere).
+\end{itemize}
+
+In a convolution layer, filter's weights and biases are parameters that will be learned.
+
+\textbf{Example:}  
+If the input is a $5 \times 5$ matrix and the filter is $3 \times 3$, the output will be $3 \times 3$. Each output entry is computed as the sum of elementwise products between the filter and the corresponding $3 \times 3$ patch of the input.
+
+\paragraph{Padding} 
+Convolution shrinks the size of the matrix, losing corner information. We can pad 0's around the original matrix.
+
+If we pad on each side by $p = \frac{f-1}{2}$ 0's (filter size is often odd), after convolution, the matrix size is still $n \times n$.
+
+\paragraph{Pooling} 
+Pooling layers reduce the spatial dimensions (width and height) of the input, helping to control overfitting and reduce computation.
+
+\begin{itemize}
+    \item \textbf{Max Pooling:} For each region (e.g., $2 \times 2$), output the maximum value.
+    \item \textbf{Average Pooling:} For each region, output the average value.
+    \item Pooling is typically applied with a stride equal to the pooling window size (e.g., non-overlapping $2 \times 2$ regions).
+    \item No parameters are learned in pooling layers.
+    \item Pooling helps make the representation approximately invariant to small translations in the input.
+\end{itemize}
+
+Pooling is similar to convolution in that it operates on local regions, but instead of a learned filter, it uses a fixed function (max or average).

@@ -1,0 +1,128 @@
+\section{Boosting and Ensemble Methods}
+
+\subsection{Strong vs.\ Weak Learning}
+\begin{itemize}
+    \item \textbf{Strong learner:} for every distribution $P$ and every $\epsilon>0$, outputs $h$ with $\mathrm{err}_P(h)\le \epsilon$ (with probability $1 - \delta$).
+    \item \textbf{Weak learner:} for every distribution $P$, outputs $h$ that is slightly better than random guessing:
+    \[
+    \mathrm{err}_P(h)\le \frac{1}{2}-\gamma
+    \]
+    for some fixed $\gamma>0$ (with probability $1 - \delta$).
+\end{itemize}
+
+\subsection{Boosting Idea}
+\textbf{Boosting} turns a weak learner into a strong learner by calling it repeatedly on reweighted versions of the training data and combining the resulting weak hypotheses via a weighted vote.
+
+\subsection{A Generic Boosting Recipe}
+Given training data $S=\{(x_i,y_i)\}_{i=1}^m$:
+\begin{enumerate}
+    \item Initialize a distribution over examples, e.g.\ $P_1(i)=1/m$.
+    \item For rounds $t=1,\dots,T$:
+    \begin{itemize}
+        \item Train a weak learner on distribution $P_t$ to obtain $h_t$.
+        \item Update the weights to emphasize examples that were misclassified by $h_t$.
+    \end{itemize}
+    \item Output a combined classifier of the form
+    \[
+    h_{\mathrm{final}}(x) = \mathrm{sign}\!\left(\sum_{t=1}^T \alpha_t h_t(x)\right),
+    \]
+    which is a weighted majority vote of the hypotheses.
+\end{enumerate}
+
+\subsection{AdaBoost}
+AdaBoost chooses weights and combination coefficients adaptively.
+
+\begin{algobox}
+\textbf{AdaBoost Algorithm (binary labels $y_i\in\{-1,+1\}$):}
+\begin{enumerate}
+    \item Initialize $P_1(i)=1/m$.
+    \item For $t=1,\dots,T$:
+    \begin{enumerate}
+        \item Train weak learner on $P_t$ to get $h_t$.
+        \item Weighted error:
+        \[
+        \epsilon_t = \Pr_{i\sim P_t}\left[h_t(x_i)\neq y_i\right] = \sum_{i=1}^m P_t(i)\mathbf{1}\{h_t(x_i)\neq y_i\}.
+        \]
+        \item Set
+        \[
+        \alpha_t = \frac{1}{2}\ln\left(\frac{1-\epsilon_t}{\epsilon_t}\right).
+        \]
+        \item Update weights:
+        \[
+        P_{t+1}(i)=\frac{P_t(i)\exp\!\left(-\alpha_t y_i h_t(x_i)\right)}{Z_t},
+        \]
+        where $Z_t = \sum_{i=1}^m P_t(i)\exp\!\left(-\alpha_t y_i h_t(x_i)\right)$ normalizes $P_{t+1}$ to sum to $1$.
+    \end{enumerate}
+\end{enumerate}
+\end{algobox}
+
+\paragraph{Derivation of $\alpha_t$}
+
+The coefficient $\alpha_t$ determines how much weight to assign to the $t$-th weak hypothesis $h_t$. It is derived by minimizing the weighted exponential loss on the training data.
+
+\begin{itemize}
+    \item The combined classifier after $t$ rounds is:
+    \[
+    H_t(x) = \mathrm{sign}\left(\sum_{s=1}^t \alpha_s h_s(x)\right)
+    \]
+    \item The exponential loss on the training set is:
+    \[
+    L = \sum_{i=1}^m \exp\left(-y_i \sum_{s=1}^t \alpha_s h_s(x_i)\right)
+    \]
+    \item At round $t$, we want to choose $\alpha_t$ to minimize $L$, holding previous $\alpha_s$ fixed.
+    \item Let $P_t(i)$ be the normalized weight of example $i$ at round $t$:
+    \[
+    P_t(i) = \frac{\exp\left(-y_i \sum_{s=1}^{t-1} \alpha_s h_s(x_i)\right)}{Z_{t-1}}
+    \]
+    \item The loss after adding $h_t$ is:
+    \[
+    L = Z_{t-1} \sum_{i=1}^m P_t(i) \exp\left(-\alpha_t y_i h_t(x_i)\right)
+    \]
+    \item Split the sum into correctly and incorrectly classified examples:
+    \[
+    L = Z_{t-1} \left[ \sum_{i: y_i = h_t(x_i)} P_t(i) e^{-\alpha_t} + \sum_{i: y_i \neq h_t(x_i)} P_t(i) e^{\alpha_t} \right]
+    \]
+    \item Let $\epsilon_t = \sum_{i: y_i \neq h_t(x_i)} P_t(i)$ be the weighted error.
+    \item The loss becomes:
+    \[
+    L = Z_{t-1} \left[ (1-\epsilon_t) e^{-\alpha_t} + \epsilon_t e^{\alpha_t} \right]
+    \]
+    \item Minimize $L$ with respect to $\alpha_t$:
+    \[
+    \frac{dL}{d\alpha_t} = 0 \implies -(1-\epsilon_t) e^{-\alpha_t} + \epsilon_t e^{\alpha_t} = 0
+    \]
+    \[
+    \epsilon_t e^{\alpha_t} = (1-\epsilon_t) e^{-\alpha_t}
+    \]
+    \[
+    e^{2\alpha_t} = \frac{1-\epsilon_t}{\epsilon_t}
+    \]
+    \[
+    \alpha_t = \frac{1}{2} \ln\left(\frac{1-\epsilon_t}{\epsilon_t}\right)
+    \]
+\end{itemize}
+
+This choice of $\alpha_t$ ensures that hypotheses with lower error receive higher weight in the final ensemble.
+
+\subsection{Generalization Behavior}
+Although boosting increases model complexity as $T$ grows, AdaBoost often does not overfit early; empirically, training error can drop rapidly while test error may keep improving.
+
+\subsection{Ensemble Methods}
+Ensembles combine multiple models to improve performance: $h_{\mathrm{ensemble}}(x) = \mathrm{sign}\!\left(\sum_{t=1}^T \alpha_t h_t(x)\right)$.
+
+\subsection{Bagging (Bootstrap Aggregating)}
+Bagging reduces variance by training on bootstrap resamples and averaging/voting.
+\begin{algobox}
+\textbf{Bagging Algorithm:}
+\begin{enumerate}
+    \item For $t=1,\dots,T$:
+    \begin{itemize}
+        \item Sample a bootstrap dataset $S_t$ by sampling with replacement from $S$.
+        \item Train a hypothesis $h_t$ on $S_t$.
+    \end{itemize}
+    \item Output
+    \[
+    h_{\mathrm{bag}}(x) = \mathrm{sign}\!\left(\sum_{t=1}^T h_t(x)\right)
+    \]
+\end{enumerate}
+\end{algobox}

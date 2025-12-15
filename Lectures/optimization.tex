@@ -1,2 +1,186 @@
 \section{Optimization with Gradient Descent}
-\textbf{Date:} \underline{Sep 30, 2025}
+
+\subsection{Discriminative Training Objective}
+Many supervised learning methods fit parameters $w$ by minimizing a regularized empirical risk:
+\[
+\min_w \; R(w) + C\sum_{i=1}^n L(w\cdot x_i, y_i),
+\]
+where:
+\begin{itemize}
+    \item $R(w)$ is a regularizer,
+    \item $L(\cdot,\cdot)$ is a loss,
+    \item $C$ controls the regularization tradeoff.
+\end{itemize}
+
+\subsection{Minima and Convexity}
+\begin{definition}
+A function $f:\mathbb{R}^d\to\mathbb{R}$ is \textbf{convex} if for all $w,w'\in\mathbb{R}^d$ and $\alpha\in[0,1]$,
+\[
+f(\alpha w+(1-\alpha)w') \le \alpha f(w) + (1-\alpha)f(w').
+\]
+\end{definition}
+For convex $f$, every local minimum is a global minimum.
+
+\subsection{Gradients}
+For differentiable $f:\mathbb{R}^d\to\mathbb{R}$, the \textbf{gradient} at $w$ is
+\[
+\nabla f(w) = \left(\frac{\partial f(w)}{\partial w_1},\dots,\frac{\partial f(w)}{\partial w_d}\right).
+\]
+\begin{definition}
+Critical points are $w_\star$ such that $\nabla f(w_\star)=0$.
+\end{definition}
+Critical points can be minima, maxima, or saddle points.
+
+\paragraph{First-order characterization of convexity}
+A differentiable multivariate function $f$ is convex iff
+\[
+f(w') \ge f(w) + \nabla f(w)\cdot (w'-w)
+\qquad \forall w,w'.
+\]
+
+For a convex differentiable function, any critical points $w_\star$ with $\nabla f(w_\star)=0$ is a global minimum.
+
+\subsection{Gradient Descent (GD)}
+Gradient descent iteratively steps in the negative gradient direction:
+\[
+w^{(t+1)} = w^{(t)} - \eta_t \nabla f\!\left(w^{(t)}\right),
+\]
+where $\eta_t>0$ is the step size (learning rate).
+
+\begin{algobox}
+\textbf{Gradient Descent}
+\begin{itemize}
+    \item \textbf{Input:} $f$, horizon $T$, step sizes $\eta_1,\dots,\eta_T$
+    \item Initialize $w^{(1)}=\vec{0}$ (or any start point)
+    \item For $t=1,\dots,T$: $w^{(t+1)} = w^{(t)} - \eta_t \nabla f(w^{(t)})$
+    \item \textbf{Output:} $w^{(T)}$ (common) or the average $\bar{w}=\frac{1}{T}\sum_{t=1}^T w^{(t)}$ (more stable)
+\end{itemize}
+\end{algobox}
+
+For convex $f$, GD has strong theoretical guarantees; the choice of step size is important in theory and in practice.
+
+\subsection{Stochastic Gradient Descent (SGD)}
+When $\nabla f(w)$ is expensive to compute exactly, use a random vector $g$ that is an unbiased gradient estimator:
+\[
+\mathbb{E}[g\mid w] = \nabla f(w).
+\]
+SGD uses $g$ in place of the exact gradient:
+\[
+w^{(t+1)} = w^{(t)} - \eta_t g^{(t)}.
+\]
+Step size is even more important for SGD than for GD.
+
+\subsection{Learning Linear Models with GD}
+For training data $S=\{(x_i,y_i)\}_{i=1}^n$, many regularized linear models minimize
+\[
+L_S(w)= R(w) + \frac{C}{n}\sum_{i=1}^n L(w\cdot x_i, y_i).
+\]
+For the regularized linear models discussed in class, $L_S(w)$ is convex, so GD/SGD are natural optimization choices.
+
+\subsection{Example: GD for SVM}
+Recall the (primal) SVM objective with hinge loss:
+\[
+\min_w \; \frac{1}{2}\|w\|^2 + \frac{C}{n}\sum_{i=1}^n \max\left(0,\,1-y_i(w\cdot x_i)\right).
+\]
+One (sub)gradient form gives the GD update:
+\[
+w \leftarrow (1-\eta)w + \eta\frac{C}{n}\sum_{i=1}^n y_i x_i \;\mathbf{1}\!\left\{y_i(w\cdot x_i)<1\right\}.
+\]
+This resembles the perceptron update, but enforces a stricter \emph{margin} condition.
+
+\subsection{Optimization for Large-Scale ML}
+Computing the full gradient can be expensive when:
+\begin{itemize}
+    \item the dataset is large ($n$ is large),
+    \item the data/model are high-dimensional ($d$ is large).
+\end{itemize}
+Idea: use fewer samples per update, replacing the full sum by an estimate.
+
+\subsection{SGD for Learning}
+Pick $(x,y)\in S$ uniformly at random and update using the single-example gradient:
+\[
+w^{(t+1)} = w^{(t)} - \eta_t \nabla R(w^{(t)}) - \eta_t C \nabla L(w^{(t)}\cdot x, y).
+\]
+Why this works: if $(x,y)$ is chosen uniformly, then
+\[
+\mathbb{E}\left[\nabla R(w) + C\nabla L(w\cdot x,y)\mid w\right] = \nabla L_S(w),
+\]
+so the per-example gradient is an unbiased estimator of the true gradient.
+
+\begin{proof}
+    In SGD, we pick $(x, y)$ uniformly at random from $S$ and use the stochastic gradient:
+\[
+g = \nabla R(w) + C \nabla L(w\cdot x, y)
+\]
+
+We show that $g$ is an unbiased estimator of $\nabla L_S(w)$:
+\begin{align*}
+\mathbb{E}[g \mid w] 
+&= \nabla R(w) + C\, \mathbb{E}_{(x, y)}[\nabla L(w\cdot x, y)] \\
+&= \nabla R(w) + C\, \frac{1}{n} \sum_{i=1}^n \nabla L(w\cdot x_i, y_i) \\
+&= \nabla R(w) + \frac{C}{n} \sum_{i=1}^n \nabla L(w\cdot x_i, y_i) \\
+&= \nabla L_S(w)
+\end{align*}
+\end{proof}
+
+
+
+\textbf{Conclusion:} The stochastic gradient $g$ is an unbiased estimator of the true gradient $\nabla L_S(w)$.
+
+\paragraph{In practice}
+It is common to shuffle the dataset and iterate without replacement; sampling with replacement is easier to analyze.
+
+\subsection{Example: SGD for SVM}
+With $(x,y)$ sampled uniformly, an SGD-style update for the SVM objective is:
+\[
+w \leftarrow (1-\eta)w + \eta C\, yx \;\mathbf{1}\!\left\{y(w\cdot x)<1\right\}.
+\]
+Equivalently:
+\begin{itemize}
+    \item If $y(w\cdot x)<1$, then $w\leftarrow (1-\eta)w + \eta C yx$.
+    \item Else, $w\leftarrow (1-\eta)w$.
+\end{itemize}
+This is similar to perceptron, but with margin enforcement and geometric ``shrinking''.
+
+\subsection{Practical Considerations}
+\subsubsection*{Non-differentiable Objectives}
+Non-differentiable convex functions still admit \textbf{subgradients} (tangents lying below the function).
+We can run GD/SGD with subgradients.
+
+\subsubsection*{Mini-batches}
+Mini-batch SGD interpolates between SGD (batch size $1$) and full GD (batch size $n$).
+For a random subset $S_t\subseteq S$:
+\[
+w^{(t+1)} = w^{(t)} - \eta_t \nabla R(w^{(t)}) - \eta_t \frac{C}{|S_t|}\sum_{(x,y)\in S_t}\nabla L(w^{(t)}\cdot x,y).
+\]
+
+\subsubsection*{Step Size}
+\begin{itemize}
+    \item Smaller step sizes: less stochasticity, more GD-like.
+    \item Larger step sizes: more stochasticity (can help progress) but more uncertainty.
+    \item Decaying step sizes are common in practice.
+\end{itemize}
+
+\subsubsection*{Conditioning}
+Well-conditioned objectives converge more easily than ill-conditioned ones (elongated level sets can cause slow progress).
+
+\subsubsection*{Adaptive Gradients}
+AdaGrad changes the step size for each coordinate based on previous gradients, shrinking it more for parameters that have seen large gradients in the past. For all coordinates $i \in [d]$:
+\begin{itemize}
+    \item \textbf{Derivative:} $g_{i,t} = \frac{\partial \mathcal{L}(w^{(t)})}{\partial w_i} = [\nabla \mathcal{L}(w^{(t)})]_i$
+    \item \textbf{Update:}
+    \[
+    w_i^{(t+1)} = w_i^{(t)} - \eta \frac{g_{i,t}}{\sqrt{0.01 + \sum_{k=1}^t g_{i,k}^2}}
+    \]
+    where $0.01$ is a stabilizer and the denominator accumulates the sum of squares of past derivatives.
+\end{itemize}
+
+\paragraph{Momentum}
+Use an exponentially-weighted moving average of gradients to encourage consistent directions:
+\[
+G^{(t)} = (1-\beta)G^{(t-1)} + \beta \nabla L_S(w^{(t)}),\qquad
+w^{(t+1)} = w^{(t)} - \eta G^{(t)}.
+\]
+
+\subsubsection*{Non-convexity}
+Non-convex objectives are challenging in general, but SGD is widely and successfully used in non-convex settings (e.g.\ neural networks), and under specific assumptions SGD can be shown to converge to good minima.

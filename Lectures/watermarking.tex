@@ -1,0 +1,37 @@
+\section{Watermarks for Language Models}
+
+\subsection{Motivation: Detection vs.\ Watermarking}
+Pure detection of machine-generated text becomes impossible as models improve.
+An alternative is to \textbf{watermark} generated text so that it can be detected later.
+
+\subsection{Hash-Based Watermarks}
+Idea (Kirchenbauer et al., ICML 2023):
+\begin{itemize}
+    \item At each step, use a hash of the preceding context to seed a pseudo-random partition of the vocabulary into a \textbf{red-list} and its complement.
+    \item Modify sampling so the model preferentially chooses tokens not in the red-list.
+    \item Detection: under the null hypothesis (no watermark), about $50\%$ of tokens fall in the red-list; if a document has suspiciously \emph{few} red-list tokens, it is likely watermarked.
+\end{itemize}
+This approach creates a tradeoff between \textbf{distortion} and \textbf{detectability}.
+
+\subsection{Distortion-Free Watermarking via a Key}
+Goal: watermark without changing the distribution of the model outputs (at least on first use).
+Use a secret \textbf{watermark key} (a seeded RNG sequence) to induce correlations between RNG values and sampled tokens.
+
+\paragraph{(One-shot) Distortion-Free Property}
+The watermarked generator behaves like the unwatermarked generator the first time it is run; detection is only possible if the detector knows the key.
+
+\subsection{Robust Detection}
+Practical challenges:
+\begin{itemize}
+    \item The detector may not know the original prompt.
+    \item The output may be cropped/edited.
+\end{itemize}
+Detection can align the RNG sequence with the observed text and use edit-distance (Levenshtein distance) robustness to substitutions/insertions/deletions.
+
+\subsection{Inverse Transform Sampling (ITS)}
+ITS provides a decoder that maps a probability vector over the vocabulary and a uniform random value $u\sim \mathrm{Uniform}(0,1)$ to a sampled token.
+This induces detectable correlations between $u$ and the chosen token when the key is reused, enabling hypothesis testing.
+
+\subsection{Theory (High-level)}
+Detectability improves with longer text (via concentration bounds such as Hoeffding) and worsens with longer RNG sequences (via a union bound over possible alignments).
+Low-entropy sequences are harder to watermark.

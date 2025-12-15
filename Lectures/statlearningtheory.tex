@@ -1,0 +1,210 @@
+\section{Statistical Learning Theory}
+
+Let $(X,Y)\sim P$ be drawn from an unknown data-generating distribution.
+We observe a sample $S=\{(x_1,y_1),\dots,(x_m,y_m)\}$ drawn i.i.d.\ from $P$ and consider a hypothesis class $H$.
+
+\paragraph{Errors}
+For a loss $\Delta(\hat{y},y)\in[0,1]$ (e.g.\ $0/1$ loss), define:
+\[
+\mathrm{err}_S(h) = \frac{1}{m}\sum_{i=1}^m \Delta(h(x_i),y_i),
+\qquad
+\mathrm{err}_P(h) = \mathbb{E}_{(x,y)\sim P}\left[\Delta(h(x),y)\right].
+\]
+
+\paragraph{Psychic abilities thought experiment}
+Suppose there are $N$ students; each student ``guesses'' an $m$-bit string.
+If a student is not psychic, assume each bit is guessed independently and incorrectly with probability $p$.
+Then the probability a fixed student guesses the \emph{entire} string is $(1-p)^m$.
+
+If students guess independently, the probability that \emph{at least one} student gets the whole string right is
+\[
+1-\left(1-(1-p)^m\right)^N,
+\]
+e.g., for $N=200$, $p=0.5$, and $m=4$, this is about $0.999$.
+In particular, a simple upper bound (union bound: $\Pr\left(\bigcup_{i=1}^N A_i\right) \le \sum_{i=1}^N \Pr(A_i)$, where each $A_i$ is the event that student $i$ guesses correctly) is
+\[
+\Pr(\text{some student guesses correctly}) \le N(1-p)^m.
+\]
+So to make ``zero errors'' convincing of telepathic abilities at confidence $1-\delta$, it is enough to pick $m$ such that
+\[
+N(1-p)^m \le \delta.
+\]
+
+\paragraph{Overfitting intuition}
+If the hypothesis class is extremely expressive (e.g.\ high-degree polynomials, or ``pick the best analyst among many''), then it is easy to find a hypothesis that fits the observed data well by chance.
+Generalization bounds quantify this effect via complexity terms like $|H|$, VC dimension, or Rademacher complexity.
+
+\subsection{Finite Hypothesis Spaces and Zero Training Error}
+\paragraph{Setting}
+Assume $H$ is finite and there exists $h^\star\in H$ with $\mathrm{err}_P(h^\star)=0$ (the \textbf{realizable} case).
+Assume the learning algorithm returns a hypothesis $\hat{h}$ with zero training error:
+\[
+\mathrm{err}_S(\hat{h}) = 0.
+\]
+
+What is the probability that the generalization error of $\hat{h}$ is large, i.e.\ $\mathrm{err}_P(\hat{h})\ge \epsilon$?
+
+\subsubsection*{Generalization Error Bound (Finite $H$, Zero Training Error)}
+
+Proof intuition: define the bad hypotheses and bound the probability that any of them achieves zero training error.
+
+Define the set of \textbf{bad} hypotheses:
+\[
+B = \{h\in H : \mathrm{err}_P(h)\ge \epsilon\}.
+\]
+For a fixed $h\in B$, the probability it makes \emph{no} training mistakes is
+\[
+\Pr\!\left(\mathrm{err}_S(h)=0\right) \le (1-\epsilon)^m \le e^{-\epsilon m}.
+\]
+Here we used a useful formula: $1+x \le e^x$ for all $x\in\mathbb{R}$.
+By the union bound,
+\[
+\Pr\!\left(\exists h\in B:\mathrm{err}_S(h)=0\right) \le |B|e^{-\epsilon m}\le |H|e^{-\epsilon m}.
+\]
+Since ERM returns some $h$ with $\mathrm{err}_S(h)=0$, we obtain
+\[
+\Pr\!\left(\mathrm{err}_P(\hat{h})\ge \epsilon\right)\le |H|e^{-\epsilon m}.
+\]
+
+\subsubsection*{Sample Complexity Bound}
+To ensure $\Pr(\mathrm{err}_P(\hat{h})\le \epsilon)\ge 1-\delta$, it suffices that
+\[
+|H|e^{-\epsilon m} \le \delta
+\qquad\Longleftrightarrow\qquad
+m \ge \frac{1}{\epsilon}\left(\ln|H| + \ln\frac{1}{\delta}\right).
+\]
+
+\subsubsection*{Example: Boolean Conjunctions}
+Let $H$ be the class of Boolean conjunctions with $\ell$ literals over $N$ binary variables.
+Then
+\[
+|H| = \binom{N}{\ell}\,2^\ell,
+\]
+since we choose which $\ell$ variables appear, and for each chosen variable decide whether it is negated.
+
+\subsubsection*{Probably Approximately Correct (PAC) Learning}
+
+\begin{definition}
+    A concept class $C$ is \textbf{PAC-learnable} by a learning algorithm $\mathcal{L}$ using hypothesis class $H$ and a sample $S$ of $n$ examples drawn i.i.d.\ from some fixed distribution $P(X)$ and labeled by a concept $c \in C$, if for sufficiently large $n$,
+    \[
+    P\left(\mathrm{err}_P(h_{\mathcal{L}(S)}) \leq \epsilon\right) \geq 1 - \delta
+    \]
+    for all $c \in C$, $\epsilon > 0$, $\delta > 0$, and $P(X)$. The algorithm $\mathcal{L}$ is required to run in polynomial time in $1/\epsilon$, $1/\delta$, $n$, the size of the training examples, and the size of $c$.
+\end{definition}
+
+A concept class is a set of functions mapping from the instance space to $\{0,1\}$. Often $C = H$.
+
+The sample complexity of PAC-learning a finite hypothesis class $H$ in the realizable case is
+\[
+m = O\left(\frac{1}{\epsilon}\left(\ln|H| + \ln\frac{1}{\delta}\right)\right).
+\]
+
+\subsection{Finite Hypothesis Spaces and Non-Zero Training Error}
+When models have the capacity to fit any dataset, the danger is that they may fail to generalize.
+
+In the \textbf{agnostic} setting, we do not assume there is a perfect hypothesis in $H$.
+We assume the learning algorithm returns some hypothesis $\hat{h}$ (e.g.\ via ERM) that minimizes training error.
+We want a bound that relates $\mathrm{err}_P(h)$ and $\mathrm{err}_S(h)$ for \emph{every} $h\in H$.
+
+What is the probability that the generalization error of $\hat{h}$ exceeds the sample error by more than $\epsilon$, i.e.\ $|\mathrm{err}_P(\hat{h}) - \mathrm{err}_S(\hat{h})| \ge \epsilon$?
+
+\subsubsection*{Hoeffding's Inequality}
+Let $Z_1,\dots,Z_m$ be i.i.d.\ random variables with values in $[0,1]$ and sample mean $\bar{Z}=\frac{1}{m}\sum_{i=1}^m Z_i$.
+Then
+\[
+\Pr\!\left(|\bar{Z}-\mathbb{E}[\bar{Z}]|\ge \epsilon\right) \le 2e^{-2\epsilon^2 m}.
+\]
+
+\subsubsection*{Finite $H$ Generalization Bound (Non-Zero Training Error)}
+Fix $h\in H$ and define $Z_i=\Delta(h(x_i),y_i)\in[0,1]$.
+Then $\bar{Z}=\mathrm{err}_S(h)$ and $\mathbb{E}[\bar{Z}]=\mathrm{err}_P(h)$, so
+\[
+\Pr\!\left(\mathrm{err}_P(h)-\mathrm{err}_S(h)\ge \epsilon\right)\le 2e^{-2\epsilon^2 m}.
+\]
+Apply the union bound over $H$:
+\[
+\Pr\!\left(\exists h\in H:\mathrm{err}_P(h)-\mathrm{err}_S(h)\ge \epsilon\right)\le 2|H|e^{-2\epsilon^2 m}.
+\]
+Equivalently, with probability at least $1-\delta$, \emph{simultaneously for all $h\in H$},
+\[
+\mathrm{err}_P(h)\le \mathrm{err}_S(h) + \sqrt{\frac{\ln(2|H|) + \ln(1/\delta)}{2m}}.
+\]
+
+\subsubsection*{Structural Risk Minimization (SRM)}
+If we have nested hypothesis classes $H_1 \subset H_2 \subset \cdots$ of increasing complexity, SRM trades off:
+\begin{itemize}
+    \item \textbf{Training error} (typically decreases with larger classes)
+    \item \textbf{Complexity penalty} (typically increases with larger classes)
+\end{itemize}
+to reduce both underfitting and overfitting.
+
+\subsubsection*{Rademacher Complexity}
+Let $\epsilon_1,\dots,\epsilon_m$ be i.i.d.\ Rademacher variables (each $\pm1$ with probability $1/2$).
+\begin{definition}
+The empirical Rademacher complexity of $H$ on a sample $S=\{(x_i,y_i)\}_{i=1}^m$ is
+\[
+\mathcal{R}_m(H,S)=\mathbb{E}_{\epsilon}\left[\sup_{h\in H}\frac{1}{m}\sum_{i=1}^m \epsilon_i\,\Delta(h(x_i),y_i)\right].
+\]
+The (expected) Rademacher complexity is $\mathcal{R}_m(H)=\mathbb{E}_S[\mathcal{R}_m(H,S)]$.
+\end{definition}
+
+\textbf{Intuition:} No matter what randomization I have (expectation: average over all assignments of $\epsilon$), there are still hypotheses that are able to capture the positive epsilons (noise) better than chance, that means the hypothesis class is very expressive and complex.
+
+\paragraph{Inability to Correlate with Noise Guarantees Generalization}
+
+\begin{theorem}
+    For any hypothesis class $H$,
+\[
+\mathbb{E}\left[\sup_{h\in H}\left(\mathrm{err}_P(h) - \mathrm{err}_S(h)\right)\right] \le 2\mathcal{R}_m(H)
+\]
+\end{theorem} 
+
+\textit{Proof Sketch:} Let $S'$ be a "ghost sample" consisting of $m$ additional i.i.d.\ draws from $P$.
+\begin{itemize}
+    \item $\mathbb{E}[\mathrm{err}_{S'}(h) - \mathrm{err}_S(h) \mid S] = \mathrm{err}_P(h) - \mathrm{err}_S(h)$
+    \item In the expression $\mathrm{err}_{S'}(h) - \mathrm{err}_S(h)$, every time $h$ mislabels a point in $S \cup S'$, it is equally likely to occur with a $+1$ or $-1$ coefficient.
+\end{itemize}
+
+\subsection{Infinite Hypothesis Spaces and VC Dimension}
+When $H$ is infinite, $|H|$ is not meaningful. Instead we measure an \emph{effective size} of $H$ on $m$ points.
+
+\subsubsection*{Effective Number of Hypotheses and the Growth Function}
+How many distinct labelings can $H$ realize on a sample of size $m$?
+Define
+\[
+H[S] = \{(h(x_1),\dots,h(x_m)) : h\in H\},
+\qquad
+\Pi_H(m) = \max_{|S|=m} |H[S]|.
+\]
+
+\subsubsection*{VC Dimension}
+\begin{definition}
+$H$ \textbf{shatters} a set of $m$ points if it realizes all $2^m$ labelings on that set, i.e.\ $|H[S]|=2^m$.
+The \textbf{VC dimension} $\mathrm{VC}(H)$ is the largest $m$ such that some set of size $m$ is shattered.
+\end{definition}
+Equivalently, $\mathrm{VC}(H)$ is the largest $m$ for which $\Pi_H(m)=2^m$.
+
+\paragraph{Sauer--Shelah (growth function bound)}
+If $\mathrm{VC}(H)=d$, then for $m\ge d$,
+\[
+\Pi_H(m) \le \sum_{i=0}^d \binom{m}{i} \le \left(\frac{em}{d}\right)^d.
+\]
+
+\paragraph{Generalization via inability to correlate with noise}
+\[
+\mathbb{E}\left[\sup_{h\in H}\left(\mathrm{err}_P(h)-\mathrm{err}_S(h)\right)\right]\le 2\mathcal{R}_m(H).
+\]
+
+\paragraph{Massart's Lemma (via the growth function)}
+\[
+\mathcal{R}_m(H)\le \sqrt{\frac{2\ln \Pi_H(m)}{m}}.
+\]
+
+Example bounds from the slides:
+\begin{itemize}
+    \item If $H$ is the set of subintervals of a line, $\Pi_H(m)=\binom{m}{2}+m+1$.
+    \item For $d$-dimensional linear classifiers, $\Pi_H(m)\lesssim \left(\frac{em}{d}\right)^d$, giving an expected gap on the order of $O\!\left(\sqrt{\frac{d\log m}{m}}\right)$.
+\end{itemize}
+
+\subsection{Epilogue: Rethinking Generalization}
+Modern deep networks can fit random labels (high capacity) yet generalize well on real labels, motivating more nuanced explanations of generalization beyond classical capacity measures alone.

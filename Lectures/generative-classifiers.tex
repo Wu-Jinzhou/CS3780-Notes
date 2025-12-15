@@ -1,0 +1,94 @@
+\section{Generative Classifiers and Naive Bayes}
+
+\subsection{Bayes Decision Rule (0/1 Loss)}
+Assume the data-generating distribution $P(X,Y)$ is known. To minimize $0/1$ loss, predict
+\[
+h(x)=\arg\max_{y\in\mathcal{Y}} P(y\mid x).
+\]
+Using Bayes' rule,
+\[
+P(y\mid x)=\frac{P(x\mid y)P(y)}{P(x)}
+\quad\Longrightarrow\quad
+h(x)=\arg\max_{y} P(x\mid y)P(y).
+\]
+
+\subsection{Generative Modeling vs.\ Discriminative Modeling}
+\begin{itemize}
+    \item \textbf{Generative:} model $P(x, y)$ (joint distribution), then use Bayes rule to get $P(y \mid x)$.
+    \item \textbf{Conditional / discriminative:} model $P(y\mid x)$ directly (e.g.\ logistic regression).
+    \item \textbf{ERM:} pick $h$ to minimize empirical loss on training data.
+\end{itemize}
+
+\subsection{Multivariate (Bernoulli) Naive Bayes}
+Assume $x\in\{0,1\}^d$ and conditional independence of features given the class:
+\[
+P(x\mid y)=\prod_{j=1}^d P(x_j\mid y).
+\]
+The classifier is
+\[
+h(x)=\arg\max_{y\in\{+1,-1\}} P(y)\prod_{j=1}^d P(x_j\mid y).
+\]
+In log-space:
+\[
+h(x)=\arg\max_{y}\left[\log P(y) + \sum_{j=1}^d \log P(x_j\mid y)\right].
+\]
+
+\paragraph{Estimators and Smoothing}
+\begin{itemize}
+    \item \textbf{Estimating $P(Y)$:} Use the fraction of positive/negative examples in the training data:
+    \[
+    \hat{P}(Y = y) = \frac{m_y}{m}
+    \]
+    where $m_y$ is the number of training examples in class $y$ and $m$ is the total number of examples.
+    \item \textbf{Estimating $P(X \mid Y)$:} 
+    \begin{itemize}
+        \item \textbf{Maximum Likelihood Estimate:}
+        \[
+        \hat{P}(X_i = x \mid Y = y) = \frac{\#(X_i = x, y)}{m_y}
+        \]
+        where $\#(X_i = x, y)$ is the number of training examples in class $y$ where feature $X_i$ takes value $x$.
+        \item \textbf{Laplace Smoothing:}
+        \[
+        \hat{P}(X_i = x \mid Y = y) = \frac{\#(X_i = x, y) + 1}{m_y + |X_i|}
+        \]
+        where $|X_i|$ is the number of different values that feature $X_i$ can take.
+    \end{itemize}
+\end{itemize}
+
+\paragraph{Connection to Linear Classification}
+For binary $x_j\in\{0,1\}$, the log-odds can be rearranged into a linear rule:
+\[
+h(x)=\mathrm{sign}(w\cdot x + b),
+\]
+for appropriate $w,b$ determined by the Naive Bayes parameters.
+
+
+\subsection{Multinomial Naive Bayes (Text)}
+For documents represented as a bag of words, assume each word is drawn i.i.d.\ from a class-specific distribution over the vocabulary.
+If a document has word counts $c(w)$, then
+\[
+P(x\mid y)\propto \prod_{w\in\mathcal{V}} P(w\mid y)^{c(w)},
+\]
+and classification again uses $\arg\max_y P(y)P(x\mid y)$.
+
+\subsection{Modeling Continuous Variables: Linear Discriminant Analysis (LDA)}
+Assume class-conditional Gaussians with shared covariance:
+\[
+X\mid (Y=y)\sim \mathcal{N}(\mu_y,\Sigma),\qquad y\in\{+1,-1\}.
+\]
+Then Bayes classification reduces to a linear decision boundary:
+\[
+h(x)=\mathrm{sign}(w\cdot x + b),
+\quad
+w=\Sigma^{-1}(\mu_{+}-\mu_{-}),
+\]
+\[
+b=\ln\frac{P(Y=+1)}{P(Y=-1)}-\frac{1}{2}(\mu_{+}+\mu_{-})^\top\Sigma^{-1}(\mu_{+}-\mu_{-}).
+\]
+
+\paragraph{Parameter Estimation}
+\begin{itemize}
+    \item Priors $P(Y=y)$: class frequencies.
+    \item Means $\mu_y$: per-class sample means.
+    \item Shared covariance $\Sigma$: pooled within-class covariance estimate.
+\end{itemize}

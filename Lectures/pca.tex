@@ -1,0 +1,56 @@
+\section{Principal Component Analysis (PCA)}
+
+\subsection{Dimensionality Reduction}
+We often want to replace high-dimensional data $x\in\mathbb{R}^d$ with a lower-dimensional representation while preserving as much structure as possible.
+PCA finds a low-dimensional \emph{linear} subspace capturing maximal variance.
+
+\subsection{Variance Along a Direction}
+Assume data are centered: $\frac{1}{n}\sum_{i=1}^n x_i = 0$.
+For a unit vector $v$ ($\|v\|=1$), the projection of $x_i$ onto $v$ is $v^\top x_i$, and the variance in direction $v$ is
+\[
+\mathrm{Var}_v = \frac{1}{n}\sum_{i=1}^n (v^\top x_i)^2.
+\]
+Let $X\in\mathbb{R}^{n\times d}$ contain $x_i^\top$ as rows, and define the covariance matrix
+\[
+\Sigma=\frac{1}{n}X^\top X.
+\]
+Then
+\[
+\mathrm{Var}_v = v^\top \Sigma v.
+\]
+
+\subsection{The PCA Objective}
+\paragraph{First Principal Component}
+\[
+v_1 = \arg\max_{v:\|v\|=1} v^\top \Sigma v.
+\]
+\textbf{Solution:} $v_1$ is the top eigenvector of $\Sigma$ (associated with the largest eigenvalue $\lambda_1$).
+
+\paragraph{$k$ Principal Components}
+Let $V_k=[v_1,\dots,v_k]\in\mathbb{R}^{d\times k}$ with $V_k^\top V_k = I$.
+PCA chooses $V_k$ to maximize
+\[
+\mathrm{tr}(V_k^\top \Sigma V_k) = \sum_{j=1}^k \lambda_j.
+\]
+
+\subsection{Reconstruction Perspective}
+Project and reconstruct via
+\[
+z = V_k^\top x,\qquad \hat{x}=V_k z = V_kV_k^\top x.
+\]
+PCA is equivalently the solution to minimizing total reconstruction error
+\[
+\sum_{i=1}^n \|x_i - V_kV_k^\top x_i\|^2.
+\]
+
+\subsection{Explained Variance}
+If $\lambda_1\ge \cdots \ge \lambda_d$ are eigenvalues of $\Sigma$, then:
+\begin{itemize}
+    \item Total variance: $\mathrm{TV}=\sum_{j=1}^d \lambda_j$.
+    \item Variance explained by first $k$ components: $\sum_{j=1}^k \lambda_j$.
+    \item Fraction explained:
+    \[
+    \frac{\sum_{j=1}^k \lambda_j}{\sum_{j=1}^d \lambda_j}.
+    \]
+\end{itemize}
+Rule of thumb: keep $k$ so that $80\%-90\%$ of variance is retained.

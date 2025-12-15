@@ -1,0 +1,51 @@
+\section{Autoencoders and Diffusion Models}
+
+\subsection{Autoencoders}
+An \textbf{autoencoder} learns a representation $z$ of an input $x$ by training an encoder--decoder pair:
+\[
+z=f_\theta(x),\qquad \hat{x}=g_{\theta'}(z)=g_{\theta'}(f_\theta(x)).
+\]
+The basic objective is reconstruction:
+\[
+\min_{\theta,\theta'} \;\; \mathbb{E}\left[\|x-g_{\theta'}(f_\theta(x))\|^2\right].
+\]
+
+\subsection{PCA as a Linear Autoencoder}
+If $f$ and $g$ are linear maps and we use squared reconstruction loss, the optimal solution spans the PCA subspace (the top principal components).
+
+\subsection{Non-Linear Autoencoders}
+With neural networks for $f$ and $g$, autoencoders can learn non-linear representations, but require regularization/constraints to avoid learning the identity map.
+
+\subsection{Sparse Autoencoders}
+Encourage sparse representations by adding an $\ell_1$ penalty on the code:
+\[
+\mathcal{L}(x)=\|x-g(f(x))\|^2 + \lambda\|f(x)\|_1.
+\]
+
+\subsection{Denoising Autoencoders}
+Corrupt the input $x$ into $\tilde{x}$ (e.g.\ add noise) and train the model to reconstruct $x$:
+\[
+\min\; \mathbb{E}\left[\|x-g(f(\tilde{x}))\|^2\right].
+\]
+
+\subsection{Denoising Diffusion}
+Diffusion models can be viewed as iterated denoising.
+\begin{itemize}
+    \item \textbf{Forward process:} gradually add noise to data $x_0$ to obtain $x_T\approx \mathcal{N}(0,I)$.
+    \item \textbf{Learned reverse process:} train a denoiser to map noisy samples toward the data manifold.
+\end{itemize}
+
+\paragraph{Sampling (High-level)}
+Start from $x_T\sim \mathcal{N}(0,I)$ and iterate for $t=T,\dots,1$:
+\begin{itemize}
+    \item Denoise using a learned denoising autoencoder.
+    \item Add the appropriate amount of noise to sample $x_{t-1}$.
+\end{itemize}
+
+\subsection{Latent Diffusion}
+Diffusion in pixel space can be expensive for high-dimensional $x$.
+\textbf{Latent diffusion} trains:
+\begin{itemize}
+    \item an autoencoder to map $x \mapsto z=f(x)$ into a lower-dimensional latent space,
+    \item a diffusion model over $z$ rather than over $x$.
+\end{itemize}
