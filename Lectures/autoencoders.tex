@@ -1,51 +1,138 @@
 \section{Autoencoders and Diffusion Models}
 
 \subsection{Autoencoders}
-An \textbf{autoencoder} learns a representation $z$ of an input $x$ by training an encoder--decoder pair:
+\paragraph{Encoder + decoder}
+An \textbf{autoencoder} learns a representation of an input $x\in\mathbb{R}^d$ via:
 \[
-z=f_\theta(x),\qquad \hat{x}=g_{\theta'}(z)=g_{\theta'}(f_\theta(x)).
-\]
-The basic objective is reconstruction:
-\[
-\min_{\theta,\theta'} \;\; \mathbb{E}\left[\|x-g_{\theta'}(f_\theta(x))\|^2\right].
+z=f_\theta(x)\in\mathbb{R}^k,\qquad \hat{x}=g_{\theta'}(z)=g_{\theta'}(f_\theta(x)).
 \]
 
-\subsection{PCA as a Linear Autoencoder}
-If $f$ and $g$ are linear maps and we use squared reconstruction loss, the optimal solution spans the PCA subspace (the top principal components).
+\paragraph{Reconstruction objective}
+With squared error,
+\[
+\min_{\theta,\theta'}\ \mathbb{E}\left[\|x-g_{\theta'}(f_\theta(x))\|^2\right].
+\]
+The bottleneck dimension $k$ is typically smaller than $d$.
+
+\subsection{PCA Revisited: Reconstruction Objectives}
+\paragraph{One component}
+For a unit vector $v\in\mathbb{R}^d$ (with $v^\top v=1$), the 1D reconstruction of $x_i$ is $(v^\top x_i)v$, and the reconstruction objective is
+\[
+\arg\min_{v:\,v^\top v=1}\ \frac{1}{n}\sum_{i=1}^n \left\|x_i-(v^\top x_i)v\right\|^2.
+\]
+
+\paragraph{$k$ components}
+Let $V=[v_1,\dots,v_k]\in\mathbb{R}^{d\times k}$ with orthonormal columns $V^\top V=I$.
+The projection is $V^\top x_i\in\mathbb{R}^k$ and the reconstruction is $VV^\top x_i$.
+The reconstruction objective becomes
+\[
+\arg\min_{V:\,V^\top V=I}\ \frac{1}{n}\sum_{i=1}^n \left\|x_i - VV^\top x_i\right\|^2.
+\]
+
+\subsection{PCA is a Linear Autoencoder (Derivation)}
+\paragraph{Linear encoder/decoder}
+Choose linear maps with a bottleneck:
+\[
+\text{encoder: } a = V^\top x\in\mathbb{R}^k,\qquad
+\text{decoder: } \hat{x}=Va\in\mathbb{R}^d,
+\]
+so $\hat{x}=VV^\top x$ and the reconstruction error for a sample is $L(x)=\|x-\hat{x}\|^2$.
+
+\paragraph{Connection to PCA}
+Assume centered data and let $\Sigma=\frac{1}{n}\sum_{i=1}^n x_i x_i^\top$.
+Let $P=VV^\top$.
+Since $V^\top V=I$, $P$ is an orthogonal projection: $P^\top=P$ and $P^2=P$.
+Then for each $i$,
+\begin{align*}
+\|x_i-Px_i\|^2
+&=x_i^\top (I-P)^\top(I-P)x_i\\
+&=x_i^\top (I-P)x_i\\
+&=\|x_i\|^2 - x_i^\top Px_i.
+\end{align*}
+Thus
+\[
+\frac{1}{n}\sum_{i=1}^n \|x_i - VV^\top x_i\|^2
+=\frac{1}{n}\sum_{i=1}^n \|x_i\|^2 - \frac{1}{n}\sum_{i=1}^n x_i^\top VV^\top x_i.
+\]
+Using $\mathrm{tr}(AB)=\mathrm{tr}(BA)$,
+\[
+\frac{1}{n}\sum_{i=1}^n x_i^\top VV^\top x_i
+=\mathrm{tr}\!\left(V^\top \left(\frac{1}{n}\sum_{i=1}^n x_i x_i^\top\right)V\right)
+=\mathrm{tr}(V^\top \Sigma V).
+\]
+The first term $\frac{1}{n}\sum_i \|x_i\|^2$ is constant in $V$, so minimizing reconstruction error is equivalent to maximizing $\mathrm{tr}(V^\top \Sigma V)$.
+The solution is $V=[q_1,\dots,q_k]$, the top $k$ eigenvectors of $\Sigma$ (PCA).
 
 \subsection{Non-Linear Autoencoders}
-With neural networks for $f$ and $g$, autoencoders can learn non-linear representations, but require regularization/constraints to avoid learning the identity map.
+Replace linear maps with neural networks.
+An example architecture:
+\[
+f:\mathbb{R}^d\to\mathbb{R}^k,\qquad f(x)=W_2\,\mathrm{ReLU}(W_1x),
+\]
+\[
+g:\mathbb{R}^k\to\mathbb{R}^d,\qquad g(a)=V_2\,\mathrm{ReLU}(V_1a),
+\]
+trained with
+\[
+L(x)=\|x-g(f(x))\|^2.
+\]
+Non-linear autoencoders can capture non-linear manifolds; regularization/constraints help avoid simply learning the identity map.
 
 \subsection{Sparse Autoencoders}
-Encourage sparse representations by adding an $\ell_1$ penalty on the code:
+Encourage sparse codes by adding an $\ell_1$ penalty on the latent activations $a=f(x)$:
 \[
-\mathcal{L}(x)=\|x-g(f(x))\|^2 + \lambda\|f(x)\|_1.
+L(x)=\|x-g(f(x))\|^2 + \lambda\sum_{j=1}^k |a_j|.
 \]
 
 \subsection{Denoising Autoencoders}
-Corrupt the input $x$ into $\tilde{x}$ (e.g.\ add noise) and train the model to reconstruct $x$:
+\paragraph{Corrupt-then-reconstruct}
+Given a corruption process $\tilde{x}\sim q(\tilde{x}\mid x)$, train the model to recover the clean $x$:
 \[
-\min\; \mathbb{E}\left[\|x-g(f(\tilde{x}))\|^2\right].
+\min\ \mathbb{E}\left[\|x-g(f(\tilde{x}))\|^2\right].
 \]
+Intuition: the denoiser ``projects'' noisy inputs back toward the data manifold.
 
 \subsection{Denoising Diffusion}
-Diffusion models can be viewed as iterated denoising.
+Diffusion models can be viewed as iterated denoising with a denoising autoencoder conditioned on a noise level.
+
+\paragraph{Training (as in the slides)}
+Let $\mathrm{DAE}_w(\tilde{x},\alpha)$ be a denoising autoencoder (parameters $w$) that takes a noisy input and a noise level $\alpha\in[0,1]$.
 \begin{itemize}
-    \item \textbf{Forward process:} gradually add noise to data $x_0$ to obtain $x_T\approx \mathcal{N}(0,I)$.
-    \item \textbf{Learned reverse process:} train a denoiser to map noisy samples toward the data manifold.
+    \item Sample clean data $x_0\sim p(\text{data})$.
+    \item Sample $\alpha\sim\mathrm{Uniform}(0,1)$ and noise $\varepsilon\sim\mathcal{N}(0,I)$.
+    \item Form noisy data $\tilde{x}=\alpha x_0 + (1-\alpha)\varepsilon$.
+    \item Update $w$ to minimize
+    \[
+    \left\|x_0 - \mathrm{DAE}_w(\tilde{x},\alpha)\right\|^2.
+    \]
 \end{itemize}
 
-\paragraph{Sampling (High-level)}
-Start from $x_T\sim \mathcal{N}(0,I)$ and iterate for $t=T,\dots,1$:
+\paragraph{Generation (as in the slides)}
 \begin{itemize}
-    \item Denoise using a learned denoising autoencoder.
-    \item Add the appropriate amount of noise to sample $x_{t-1}$.
+    \item Initialize $x_T\sim\mathcal{N}(0,I)$.
+    \item For $t=T,\dots,1$:
+    \begin{itemize}
+        \item Set $\alpha_t=(T-t)/T$ and predict $\tilde{x}_0=\mathrm{DAE}_w(x_t,\alpha_t)$.
+        \item Sample $z\sim\mathcal{N}(0,I)$ and set $\alpha_{t-1}=(T-(t-1))/T$.
+        \item Update
+        \[
+        x_{t-1}=\alpha_{t-1}\tilde{x}_0 + (1-\alpha_{t-1})z.
+        \]
+    \end{itemize}
+    \item Return $x_0$.
 \end{itemize}
+
+\subsection{Extensions of Diffusion}
+Diffusion can be adapted for guided image synthesis/editing by starting from a noised version of an input and running the denoising process (high-level idea).
 
 \subsection{Latent Diffusion}
-Diffusion in pixel space can be expensive for high-dimensional $x$.
-\textbf{Latent diffusion} trains:
+\paragraph{Motivation}
+Diffusion in pixel space can be expensive: it takes $T$ denoising steps and is especially costly when $x$ is high-dimensional.
+
+\paragraph{Idea}
+Run diffusion in a lower-dimensional latent space:
 \begin{itemize}
-    \item an autoencoder to map $x \mapsto z=f(x)$ into a lower-dimensional latent space,
-    \item a diffusion model over $z$ rather than over $x$.
+    \item Train an autoencoder $x \mapsto z=f(x)$ and $x\approx g(z)$ with $z$ much lower-dimensional than $x$.
+    \item Train a diffusion model over latent codes $z$ (instead of pixels).
+    \item Sample in latent space and decode back to pixel space with $g$.
 \end{itemize}

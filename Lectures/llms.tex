@@ -1,47 +1,117 @@
 \section{Language Modeling and LLMs}
 
 \subsection{Autoregressive Modeling}
-Tokenize data into a sequence $x=(x_1,\dots,x_T)$ with $x_t\in\mathcal{V}$.
-An autoregressive model factorizes the joint distribution:
+\paragraph{Tokenization}
+Represent data as a sequence of discrete tokens
+\[
+x=(x_1,\dots,x_T),\qquad x_t\in\mathcal{V}.
+\]
+
+\paragraph{Autoregressive factorization}
+Model a joint distribution by factoring into conditional distributions:
 \[
 p(x)=\prod_{t=1}^T p(x_t\mid x_{<t}).
 \]
-
-\subsection{Next-Token Prediction}
-Training learns a conditional model $\hat{p}_\theta(x_t\mid x_{<t})$ by maximizing conditional likelihood over a corpus.
-At inference time, generation samples iteratively:
+Taking logs yields
 \[
-\hat{x}_t \sim \hat{p}_\theta(\cdot \mid \hat{x}_{<t}).
+\log p(x)=\sum_{t=1}^T \log p(x_t\mid x_{<t}).
 \]
 
+\subsection{The Next-Token Prediction Task}
+\paragraph{Conditional likelihood modeling}
+We learn a predictor $\hat{p}_\theta(x_t\mid x_{<t})$ from data.
+Given a dataset of $N$ sequences $\{x^{(i)}\}_{i=1}^N$ (each of length $T$ for simplicity), the average log-likelihood objective is
+\[
+\max_{\theta}\ \frac{1}{NT}\sum_{i=1}^N\sum_{t=1}^T \log \hat{p}_\theta\!\left(x_t^{(i)}\mid x_{<t}^{(i)}\right).
+\]
+Equivalently, minimize the negative log-likelihood (cross-entropy loss):
+\[
+\mathcal{L}(\theta)= -\frac{1}{NT}\sum_{i=1}^N\sum_{t=1}^T \log \hat{p}_\theta\!\left(x_t^{(i)}\mid x_{<t}^{(i)}\right).
+\]
+
+\subsection{The Softmax Prediction Head}
+\paragraph{Embedding + network + softmax}
+To parameterize $\hat{p}_\theta(x_t\mid x_{<t})$ with a neural network:
+\begin{itemize}
+    \item Embed tokens with $E:\mathcal{V}\to\mathbb{R}^d$ so that
+    \[
+    (x_1,\dots,x_{t-1}) \mapsto (E(x_1),\dots,E(x_{t-1}))\in\mathbb{R}^{(t-1)\times d}.
+    \]
+	    \item Compute logits with a neural network $f:\mathbb{R}^{(t-1)\times d}\to\mathbb{R}^{|\mathcal{V}|}$.
+	    \item Normalize with softmax:
+	    \[
+	    \hat{p}_\theta(x_t\mid x_{<t})=\mathrm{softmax}(f(E(x_{<t})))_{x_t}.
+	    \]
+	    \[
+	    \mathrm{softmax}(u)_k=\frac{e^{u_k}}{\sum_{j=1}^{|\mathcal{V}|} e^{u_j}}.
+	    \]
+\end{itemize}
+
 \subsection{Transformer Language Models}
-Modern LLMs are typically \textbf{decoder-only} Transformers:
+\paragraph{One network for all positions}
+We do not want a different network for each prefix length.
+Instead, use a single transformer that maps a length-$T$ embedded sequence to a length-$T$ sequence of hidden states:
+\[
+f:\mathbb{R}^{T\times d}\to\mathbb{R}^{T\times d}.
+\]
+Compose it with an output head $o:\mathbb{R}^{d}\to\mathbb{R}^{|\mathcal{V}|}$ applied at each position:
+\[
+\text{logits}_t = o(f(E(x))_t)\in\mathbb{R}^{|\mathcal{V}|}.
+\]
+\[
+\hat{p}_\theta(x_{t+1}\mid x_{\le t})=\mathrm{softmax}(\text{logits}_t).
+\]
+
+\paragraph{Causal masking}
+Use a causal (triangular) attention mask so position $t$ can only attend to positions $\le t$ (no ``looking ahead'').
+
+\subsection{Shifted Targets (Training on a Whole Sequence)}
+Given input tokens $(x_1,\dots,x_T)$, predict a shifted set of labels $(x_2,\dots,x_{T+1})$.
+Intuitively, the output at position $t$ predicts the next token.
+
+\subsection{Training Data Preprocessing and Sequence Packing}
+We often have a corpus of documents of varying length, but we want fixed-length sequences for minibatch SGD.
 \begin{itemize}
-    \item Embed tokens into vectors.
-    \item Apply stacked Transformer blocks.
-    \item Use a linear projection + softmax head to produce $\hat{p}_\theta(\cdot\mid x_{<t})$.
-    \item Use a \textbf{causal mask} so position $t$ cannot attend to future tokens.
+    \item Concatenate the corpus into one long token stream.
+    \item Insert a special sequence-separator token between documents.
+    \item Cut the stream into equal-length segments of length $T$.
 \end{itemize}
+The segment length $T$ is the \textbf{context length}.
 
-\subsection{Training Details}
-\paragraph{Shifted Targets}
-Predict the next token: inputs are $(x_1,\dots,x_{T-1})$, labels are $(x_2,\dots,x_T)$.
+\subsection{Training and Generation}
+\paragraph{Training}
+Learn the conditional distributions $\hat{p}_\theta(x_t\mid x_{<t})$ by maximizing conditional likelihood (equivalently minimizing cross-entropy).
 
-\paragraph{Sequence Packing}
-To create fixed-length training sequences:
-\begin{itemize}
-    \item Concatenate documents into one long token stream.
-    \item Insert a special separator token between documents.
-    \item Cut the stream into segments of length $T$ (the \textbf{context length}).
-\end{itemize}
-
-\subsection{Prompts and Post-Training}
-Many tasks can be solved by prompting: choose a prefix so that the likely continuation is the answer.
-In practice, post-training (supervised fine-tuning, RLHF, etc.) improves instruction-following and usability.
+\paragraph{Generation}
+Iteratively sample tokens
+\[
+\hat{x}_t \sim \hat{p}_\theta(\cdot\mid \hat{x}_{<t}),
+\]
+either starting from a special separator token (base case) or from a prefix/prompt $(\hat{x}_1,\dots,\hat{x}_{t_0})$ (warm start).
 
 \subsection{Exposure Bias}
-During generation, the model conditions on its own sampled tokens, which may differ from the training distribution.
-This distribution shift is called \textbf{exposure bias}.
+During training, condition on ground-truth prefixes $x_{<t}$.
+During generation, condition on model samples $\hat{x}_{<t}$.
+This mismatch is \textbf{exposure bias}; it becomes less problematic as the next-token predictor improves.
+
+\subsection{Prompting and Post-Training}
+\paragraph{Prompting}
+If the next-token predictor is sufficiently good, many tasks can be solved by choosing a prompt so that the most likely continuation is the desired answer.
+
+\paragraph{Post-training}
+Instruction tuning / supervised fine-tuning can make models follow prompts better.
+Safety tuning further reduces harmful outputs, but must be balanced against over-refusals (overly safe behavior on benign questions).
 
 \subsection{Generalized Next-Token Prediction}
-Autoregressive modeling can be applied to other modalities by tokenizing into discrete sequences (e.g.\ discretized image/audio patches), then training the same next-token objective.
+Autoregressive modeling applies beyond text:
+\begin{itemize}
+    \item Convert data (e.g.\ images) into a sequence of discrete codes (tokens).
+    \item Train the same next-token objective on the code sequence.
+\end{itemize}
+
+\paragraph{Is this practical? (high-level recipe)}
+\begin{itemize}
+    \item Tokenize an image into a sequence of patches/codes.
+    \item Use a \emph{discrete autoencoder} to map patches to discrete symbols.
+    \item Train an autoregressive model over the resulting symbol sequence.
+\end{itemize}

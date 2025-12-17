@@ -1,12 +1,124 @@
 \section{Perceptron}
 
+\subsection{Setup}
+We consider binary classification with labels $y_i\in\{-1,+1\}$ and (homogeneous) linear classifiers
+\[
+h_{\vec{w}}(\vec{x}) = \mathrm{sign}(\vec{w}\cdot \vec{x}).
+\]
+
+\paragraph{Radius}
+Assume there is an $R$ such that $\|\vec{x}_i\|\le R$ for all training points.
+
+\paragraph{Separability with margin}
+The dataset $S=\{(\vec{x}_1,y_1),\dots,(\vec{x}_m,y_m)\}$ is \textbf{linearly separable with (geometric) margin} $\gamma>0$ if there exists a unit vector $\vec{w}^{\,\star}$ such that
+\[
+\|\vec{w}^{\,\star}\|=1
+\qquad\text{and}\qquad
+y_i(\vec{w}^{\,\star}\cdot \vec{x}_i)\ge \gamma\ \ \forall i\in[m].
+\]
+
+\subsection{The Perceptron Algorithm (Homogeneous \& Batch)}
 \begin{itemize}
-    \item \textbf{Theorem:} Given a dataset $S = \{(\vec{x}_1, y_1), \ldots, (\vec{x}_m, y_m)\}$ and a radius $R$ such that $\|\vec{x}_i\| \leq R$ for all $i \in [m]$. If $S$ is linearly separable with (geometric) \textbf{margin} $\gamma$, then Perceptron makes at most $R^2/\gamma^2$ updates before finding a consistent linear classifier.
-    \item This upper bound holds even if
-    \begin{itemize}
-        \item We scale every instance in the training set
-        \item We shuffle the training set
-        \item We don't know the value of $\gamma$
-    \end{itemize}
-    \item Actual number of updates can vary, but we know it cannot be more than $R^2/\gamma^2$
+    \item Initialize $\vec{w}^{(0)}=\vec{0}$ and $t=0$.
+    \item While there exists an example $(\vec{x}_i,y_i)$ such that $y_i(\vec{w}^{(t)}\cdot \vec{x}_i)\le 0$ (a mistake), update
+    \[
+    \vec{w}^{(t+1)}=\vec{w}^{(t)} + y_i\vec{x}_i,
+    \qquad t\leftarrow t+1.
+    \]
+    \item Output $\vec{w}^{(t)}$.
 \end{itemize}
+Key insight: \# mistakes $=$ \# updates ($=t$).
+
+\subsection{Convergence of Perceptron}
+\begin{theorem}[Perceptron mistake bound]
+Given a dataset $S=\{(\vec{x}_1,y_1),\dots,(\vec{x}_m,y_m)\}$ and a radius $R$ such that $\|\vec{x}_i\|\le R$ for all $i\in[m]$.
+If $S$ is linearly separable with margin $\gamma$, then Perceptron makes at most $R^2/\gamma^2$ updates before finding a consistent linear classifier.
+\end{theorem}
+
+\subsection{Complete Proof}
+\paragraph{Proof outline}
+We follow the three-step outline from the slides:
+\begin{enumerate}
+    \item Lower bound $\vec{w}^{\,\star}\cdot \vec{w}^{(t)}$ in terms of $t$ and $\gamma$.
+    \item Upper bound $\|\vec{w}^{(t)}\|$ in terms of $t$ and $R$.
+    \item Combine the two bounds using a cosine argument to get a contradiction if $t>R^2/\gamma^2$.
+\end{enumerate}
+
+\paragraph{Step 1: $\vec{w}^{\,\star}\cdot \vec{w}^{(t)}$ is large}
+Let $(\vec{x}_i,y_i)$ be the example on which we make the $t$th mistake (so we perform update $t$).
+Using the perceptron update and distributivity of the dot product,
+\begin{align*}
+\vec{w}^{\,\star}\cdot \vec{w}^{(t)}
+&=\vec{w}^{\,\star}\cdot\Big(\vec{w}^{(t-1)} + y_i\vec{x}_i\Big)\\
+&=\vec{w}^{\,\star}\cdot \vec{w}^{(t-1)} + y_i(\vec{w}^{\,\star}\cdot \vec{x}_i)\\
+&\ge \vec{w}^{\,\star}\cdot \vec{w}^{(t-1)} + \gamma,
+\end{align*}
+where the last inequality uses the margin assumption $y_i(\vec{w}^{\,\star}\cdot \vec{x}_i)\ge \gamma$.
+Recursing yields
+\[
+\vec{w}^{\,\star}\cdot \vec{w}^{(t)} \ge \vec{w}^{\,\star}\cdot \vec{w}^{(0)} + t\gamma = t\gamma,
+\]
+since $\vec{w}^{(0)}=\vec{0}$.
+
+\paragraph{Step 2: $\|\vec{w}^{(t)}\|$ is not too large}
+Let $(\vec{x}_i,y_i)$ be the example on which we make the $t$th mistake.
+Expand the squared norm after the update:
+\begin{align*}
+\|\vec{w}^{(t)}\|^2
+&=\|\vec{w}^{(t-1)} + y_i\vec{x}_i\|^2\\
+&=(\vec{w}^{(t-1)} + y_i\vec{x}_i)\cdot(\vec{w}^{(t-1)} + y_i\vec{x}_i)\\
+&=\|\vec{w}^{(t-1)}\|^2 + 2y_i(\vec{w}^{(t-1)}\cdot \vec{x}_i) + y_i^2\|\vec{x}_i\|^2\\
+&\le \|\vec{w}^{(t-1)}\|^2 + 0 + R^2.
+\end{align*}
+The inequality uses:
+\begin{itemize}
+    \item Mistake condition: $y_i(\vec{w}^{(t-1)}\cdot \vec{x}_i)\le 0$.
+    \item $y_i^2=1$ and radius bound $\|\vec{x}_i\|^2\le R^2$.
+\end{itemize}
+Recursing gives
+\[
+\|\vec{w}^{(t)}\|^2 \le \|\vec{w}^{(0)}\|^2 + tR^2 = tR^2,
+\qquad\text{so}\qquad
+\|\vec{w}^{(t)}\|\le \sqrt{t}\,R.
+\]
+
+\paragraph{Step 3: Contradiction via cosine}
+Consider the angle $\theta$ between $\vec{w}^{\,\star}$ and $\vec{w}^{(t)}$:
+\[
+\cos(\theta)
+=\frac{\vec{w}^{\,\star}\cdot \vec{w}^{(t)}}{\|\vec{w}^{\,\star}\|\,\|\vec{w}^{(t)}\|}
+=\frac{\vec{w}^{\,\star}\cdot \vec{w}^{(t)}}{\|\vec{w}^{(t)}\|},
+\]
+since $\|\vec{w}^{\,\star}\|=1$.
+Using Steps 1 and 2,
+\[
+\cos(\theta)\ge \frac{t\gamma}{\sqrt{t}R}=\sqrt{t}\,\frac{\gamma}{R}.
+\]
+If $t>R^2/\gamma^2$, then $\sqrt{t}\,\gamma/R>1$, implying $\cos(\theta)>1$, which is impossible.
+Therefore $t\le R^2/\gamma^2$, proving the theorem.
+\qed
+
+\subsection{Remarks on Convergence}
+\begin{itemize}
+    \item The bound holds regardless of the order of examples; changing the order can change the final classifier and convergence speed, but not the worst-case bound.
+    \item If we scale each $\vec{x}_i \leftarrow c\vec{x}_i$, then $R\leftarrow cR$ and $\gamma\leftarrow c\gamma$, so the ratio $R^2/\gamma^2$ is unchanged.
+    \item The algorithm does not need to know $\gamma$; the analysis only uses its existence.
+\end{itemize}
+
+\subsection{Online Perceptron}
+\paragraph{Setting}
+Data arrives as a stream $(\vec{x}_1,y_1),(\vec{x}_2,y_2),\dots$.
+At each time step, predict using the current $\vec{w}$, observe $y_i$, and update if you made a mistake.
+
+\paragraph{Algorithm}
+Initialize $\vec{w}^{(0)}=\vec{0}$ and for $i=1,2,\dots$:
+\[
+\hat{y}_i=\mathrm{sign}(\vec{w}^{(i-1)}\cdot \vec{x}_i),
+\qquad
+\text{if } y_i(\vec{w}^{(i-1)}\cdot \vec{x}_i)\le 0 \text{ then }
+\vec{w}^{(i)}=\vec{w}^{(i-1)}+y_i\vec{x}_i.
+\]
+(Otherwise, $\vec{w}^{(i)}=\vec{w}^{(i-1)}$.)
+
+\paragraph{Mistake bound}
+If the stream has radius $R$ and is separable with margin $\gamma$, then the number of online mistakes (equivalently, updates) is at most $R^2/\gamma^2$ by the same proof as above.

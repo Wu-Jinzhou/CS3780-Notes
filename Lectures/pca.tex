@@ -1,56 +1,158 @@
 \section{Principal Component Analysis (PCA)}
 
-\subsection{Dimensionality Reduction}
-We often want to replace high-dimensional data $x\in\mathbb{R}^d$ with a lower-dimensional representation while preserving as much structure as possible.
-PCA finds a low-dimensional \emph{linear} subspace capturing maximal variance.
+\subsection{Setup and Goal}
+\paragraph{Dimensionality reduction}
+Given a dataset $x_1,\dots,x_n\in\mathbb{R}^d$, we want a lower-dimensional representation that preserves as much structure as possible.
+PCA finds an \emph{orthonormal} set of directions (principal components) that capture the most variance.
 
-\subsection{Variance Along a Direction}
-Assume data are centered: $\frac{1}{n}\sum_{i=1}^n x_i = 0$.
-For a unit vector $v$ ($\|v\|=1$), the projection of $x_i$ onto $v$ is $v^\top x_i$, and the variance in direction $v$ is
+\paragraph{Coordinate vs.\ principal components}
+Projecting onto coordinate axes corresponds to discarding features (e.g.\ keep $x$ and drop $y$).
+Principal components instead choose \emph{data-dependent} orthogonal directions (e.g.\ $y=x$ and $y=-x$ in 2D) that better summarize correlated features.
+
+\subsection{Principal Components}
+Principal components are vectors $v_1,\dots,v_d\in\mathbb{R}^d$ such that:
+\begin{itemize}
+    \item Unit length: $v_i^\top v_i = 1$ for all $i$.
+    \item Orthogonal: $v_i^\top v_j = 0$ for $i\neq j$.
+    \item $v_1$ is the direction of greatest variance in the data.
+    \item $v_2$ is the direction of greatest variance subject to being orthogonal to $v_1$.
+    \item etc.
+\end{itemize}
+
+\subsection{Calculating Variance in a Direction}
+\paragraph{Centering}
+Assume data are centered:
 \[
-\mathrm{Var}_v = \frac{1}{n}\sum_{i=1}^n (v^\top x_i)^2.
+\mu=\frac{1}{n}\sum_{i=1}^n x_i = 0.
 \]
-Let $X\in\mathbb{R}^{n\times d}$ contain $x_i^\top$ as rows, and define the covariance matrix
+If the data are not centered, subtract the mean from each data point: $x_i \leftarrow x_i-\mu$.
+
+\paragraph{Variance along a unit direction}
+For a unit vector $v$ with $v^\top v=1$, the projection of $x_i$ onto $v$ is $v^\top x_i$, and the variance in direction $v$ is
 \[
-\Sigma=\frac{1}{n}X^\top X.
-\]
-Then
-\[
-\mathrm{Var}_v = v^\top \Sigma v.
+\mathrm{Var}(v)=\frac{1}{n}\sum_{i=1}^n (v^\top x_i)^2.
 \]
 
 \subsection{The PCA Objective}
-\paragraph{First Principal Component}
+\paragraph{First principal component}
 \[
-v_1 = \arg\max_{v:\|v\|=1} v^\top \Sigma v.
-\]
-\textbf{Solution:} $v_1$ is the top eigenvector of $\Sigma$ (associated with the largest eigenvalue $\lambda_1$).
-
-\paragraph{$k$ Principal Components}
-Let $V_k=[v_1,\dots,v_k]\in\mathbb{R}^{d\times k}$ with $V_k^\top V_k = I$.
-PCA chooses $V_k$ to maximize
-\[
-\mathrm{tr}(V_k^\top \Sigma V_k) = \sum_{j=1}^k \lambda_j.
+v_1=\arg\max_{v:\,v^\top v=1}\ \frac{1}{n}\sum_{i=1}^n (v^\top x_i)^2.
 \]
 
-\subsection{Reconstruction Perspective}
+\paragraph{$k$th principal component}
+\[
+v_k=\arg\max_{v}\ \frac{1}{n}\sum_{i=1}^n (v^\top x_i)^2
+\quad \text{s.t.}\quad
+v^\top v=1,\ \ v^\top v_j=0\ \ \forall j<k.
+\]
+
+\subsection{Re-writing the Objective Using the Covariance Matrix}
+Define the (data) covariance matrix
+\[
+\Sigma=\frac{1}{n}\sum_{i=1}^n x_i x_i^\top \in \mathbb{R}^{d\times d}.
+\]
+Then
+\[
+\frac{1}{n}\sum_{i=1}^n (v^\top x_i)^2
+=\frac{1}{n}\sum_{i=1}^n v^\top x_i x_i^\top v
+= v^\top \left(\frac{1}{n}\sum_{i=1}^n x_i x_i^\top\right)v
+=v^\top \Sigma v.
+\]
+So the PCA objective becomes
+\[
+v_1=\arg\max_{v:\,v^\top v=1} v^\top \Sigma v.
+\]
+
+\subsection{Recap: Eigenvalue Decomposition}
+The covariance matrix $\Sigma$ is symmetric and positive semidefinite, so it has an eigenvalue decomposition
+\[
+\Sigma = Q\Lambda Q^\top,
+\]
+where $Q$ is orthogonal ($QQ^\top=I$) and $\Lambda=\mathrm{diag}(\lambda_1,\dots,\lambda_d)$ with $\lambda_1\ge \lambda_2\ge\cdots\ge \lambda_d\ge 0$.
+
+\subsection{Solving the PCA Optimization (Derivation)}
+Start from
+\[
+v_1=\arg\max_{v:\,v^\top v=1} v^\top \Sigma v
+=\arg\max_{v:\,v^\top v=1} v^\top Q\Lambda Q^\top v.
+\]
+Let $w=Q^\top v$.
+Since $Q$ is orthogonal, $\|w\|=\|Q^\top v\|=\|v\|=1$.
+Then
+\[
+v^\top Q\Lambda Q^\top v = w^\top \Lambda w = \sum_{i=1}^d \lambda_i w_i^2.
+\]
+So the simplified optimization is
+\[
+w_1=\arg\max_{w:\,w^\top w=1}\ \sum_{i=1}^d \lambda_i w_i^2.
+\]
+Because $\lambda_1\ge\cdots\ge\lambda_d$ and $\sum_i w_i^2=1$, the maximum is achieved by placing all mass on the first coordinate:
+\[
+w_1=e_1,\qquad v_1=Qw_1=Qe_1=q_1,
+\]
+where $q_1$ is the top eigenvector of $\Sigma$.
+
+\paragraph{All components}
+With the additional orthogonality constraints $w^\top w_j=0$ for $j<k$, the solution is
+\[
+w_k=e_k,\qquad v_k=Qe_k=q_k.
+\]
+
+\subsection{Variance Along a Component and Explained Variance}
+\paragraph{Variance along the $k$th principal component}
+\[
+\frac{1}{n}\sum_{i=1}^n (v_k^\top x_i)^2
+=v_k^\top \Sigma v_k
+=v_k^\top Q\Lambda Q^\top v_k
+=e_k^\top \Lambda e_k
+=\lambda_k.
+\]
+
+\paragraph{How many components to keep?}
+Total variance is
+\[
+\mathrm{TV}=\sum_{k=1}^d \lambda_k,
+\]
+and the fraction of explained variance after projecting onto the top $u$ components is
+\[
+\frac{1}{\mathrm{TV}}\sum_{k=1}^u \lambda_k.
+\]
+Rule of thumb: keep $80\%$--$90\%$ of the total variance.
+
+\subsection{Two Perspectives: Variance vs.\ Reconstruction Error}
+\paragraph{Claim}
+Maximizing variance is equivalent to minimizing reconstruction error.
+
+\paragraph{Reconstruction from a 1D projection}
+If $v^\top v=1$, then the projection of $x_i$ onto $v$ is $(v^\top x_i)v$, and the reconstruction error is
+\[
+\frac{1}{n}\sum_{i=1}^n \left\|x_i-(v^\top x_i)v\right\|^2.
+\]
+Expand the squared norm:
+\[
+\left\|x_i-(v^\top x_i)v\right\|^2
+=\|x_i\|^2 - 2(v^\top x_i)\,v^\top x_i + \|(v^\top x_i)v\|^2.
+\]
+Since $\|(v^\top x_i)v\|^2=(v^\top x_i)^2\|v\|^2=(v^\top x_i)^2$, we get
+\[
+\left\|x_i-(v^\top x_i)v\right\|^2
+=\|x_i\|^2 - (v^\top x_i)^2.
+\]
+Therefore,
+\[
+\arg\min_{v:\,v^\top v=1}\ \frac{1}{n}\sum_{i=1}^n \left\|x_i-(v^\top x_i)v\right\|^2
+=\arg\min_{v:\,v^\top v=1}\ \frac{1}{n}\sum_{i=1}^n \|x_i\|^2 - (v^\top x_i)^2
+=\arg\max_{v:\,v^\top v=1}\ \frac{1}{n}\sum_{i=1}^n (v^\top x_i)^2.
+\]
+
+\paragraph{$u$-dimensional version}
+Let $V_u=[v_1,\dots,v_u]\in\mathbb{R}^{d\times u}$ with $V_u^\top V_u=I$.
 Project and reconstruct via
 \[
-z = V_k^\top x,\qquad \hat{x}=V_k z = V_kV_k^\top x.
+z=V_u^\top x,\qquad \hat{x}=V_u z = V_uV_u^\top x.
 \]
-PCA is equivalently the solution to minimizing total reconstruction error
+Then PCA equivalently minimizes total reconstruction error
 \[
-\sum_{i=1}^n \|x_i - V_kV_k^\top x_i\|^2.
+\sum_{i=1}^n \|x_i - V_uV_u^\top x_i\|^2,
 \]
-
-\subsection{Explained Variance}
-If $\lambda_1\ge \cdots \ge \lambda_d$ are eigenvalues of $\Sigma$, then:
-\begin{itemize}
-    \item Total variance: $\mathrm{TV}=\sum_{j=1}^d \lambda_j$.
-    \item Variance explained by first $k$ components: $\sum_{j=1}^k \lambda_j$.
-    \item Fraction explained:
-    \[
-    \frac{\sum_{j=1}^k \lambda_j}{\sum_{j=1}^d \lambda_j}.
-    \]
-\end{itemize}
-Rule of thumb: keep $k$ so that $80\%-90\%$ of variance is retained.
+and (for centered data) the variance explained by the top $u$ components is $\sum_{k=1}^u \lambda_k$.

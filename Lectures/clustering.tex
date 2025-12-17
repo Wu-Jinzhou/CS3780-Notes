@@ -45,24 +45,52 @@ These steps monotonically decrease the objective but can get stuck in local mini
 \end{algobox}
 
 \subsection{Generative Clustering: Gaussian Mixture Models (GMMs)}
-Instead of hard cluster assignments, a GMM models data as a mixture:
+\paragraph{Generative Model}
+Assume a datapoint $\mathbf{x}$ is generated as follows:
+\begin{itemize}
+    \item Choose a cluster $z$ from $\{1, \ldots, K\}$ such that $p(z = k) = \pi_k$
+    \item Given $z$, sample $\mathbf{x}$ from a Gaussian: $p(\mathbf{x} \mid z = k) = \mathcal{N}(\mathbf{x} \mid \mu_k, \Sigma_k)$
+\end{itemize}
+
+This defines a joint distribution:
 \[
-p(x)=\sum_{k=1}^K \pi_k\,\mathcal{N}(x\mid \mu_k,\Sigma_k),
-\qquad \sum_{k=1}^K \pi_k = 1,\;\pi_k\ge 0.
+p(\mathbf{x}, z) = p(z) p(\mathbf{x} \mid z)
+\]
+with parameters $\pi_k, \mu_k, \Sigma_k$ for $k = 1, \ldots, K$.
+
+\paragraph{Posterior Inference}
+Given a data point $\mathbf{x}$, the probability that $z = k$ is:
+\[
+p(z = k \mid \mathbf{x}) = \frac{p(\mathbf{x} \mid z = k) p(z = k)}{p(\mathbf{x})}
+\]
+where
+\[
+p(\mathbf{x}) = \sum_{k=1}^K \pi_k \mathcal{N}(\mathbf{x} \mid \mu_k, \Sigma_k)
 \]
 
-\subsection{Expectation--Maximization (EM) for GMMs}
-EM alternates between:
+\paragraph{Parameter Estimation}
+Maximize the likelihood of the data:
+\[
+\arg\max_{\pi_1, \ldots, \pi_K,\, \mu_1, \ldots, \mu_K,\, \Sigma_1, \ldots, \Sigma_K} \sum_{n=1}^N \log p(\mathbf{x}^{(n)})
+\]
+where
+\[
+p(\mathbf{x}^{(n)}) = \sum_{k=1}^K \pi_k \mathcal{N}(\mathbf{x}^{(n)} \mid \mu_k, \Sigma_k)
+\]
+No closed form solution $\rightarrow$ use Expectation Maximization (EM).
+
+\paragraph{Expectation Maximization (EM) Algorithm}
 \begin{itemize}
-    \item \textbf{E-step:} compute responsibilities (soft assignments)
+    \item \textbf{Initialization:} randomly initialize parameters.
+    \item \textbf{E-step:} Compute soft assignments (responsibilities):
     \[
-    \gamma_{ik} = P(z_i=k\mid x_i)=\frac{\pi_k\mathcal{N}(x_i\mid \mu_k,\Sigma_k)}{\sum_{j=1}^K \pi_j\mathcal{N}(x_i\mid \mu_j,\Sigma_j)}.
+    r_k^{(n)} = p(z^{(n)} = k \mid \mathbf{x}^{(n)}) = \frac{\pi_k \mathcal{N}(\mathbf{x}^{(n)} \mid \mu_k, \Sigma_k)}{\sum_{j=1}^K \pi_j \mathcal{N}(\mathbf{x}^{(n)} \mid \mu_j, \Sigma_j)}
     \]
-    \item \textbf{M-step:} update parameters using weighted averages:
+    \item \textbf{M-step:} Update parameters using responsibilities:
     \[
-    \pi_k \leftarrow \frac{1}{n}\sum_{i=1}^n \gamma_{ik},
-    \qquad
-    \mu_k \leftarrow \frac{\sum_{i=1}^n \gamma_{ik}x_i}{\sum_{i=1}^n \gamma_{ik}},
+    \mu_k = \frac{\sum_{n=1}^N r_k^{(n)} \mathbf{x}^{(n)}}{\sum_{n=1}^N r_k^{(n)}}, \qquad
+    \pi_k = \frac{1}{N} \sum_{n=1}^N r_k^{(n)}, \qquad
+    \Sigma_k = \frac{\sum_{n=1}^N r_k^{(n)} (\mathbf{x}^{(n)} - \mu_k)(\mathbf{x}^{(n)} - \mu_k)^\top}{\sum_{n=1}^N r_k^{(n)}}
     \]
-    and similarly update $\Sigma_k$.
+    \item Repeat E and M steps until convergence.
 \end{itemize}

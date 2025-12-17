@@ -56,12 +56,19 @@ h(x)=\arg\max_{y}\left[\log P(y) + \sum_{j=1}^d \log P(x_j\mid y)\right].
 \end{itemize}
 
 \paragraph{Connection to Linear Classification}
-For binary $x_j\in\{0,1\}$, the log-odds can be rearranged into a linear rule:
-\[
-h(x)=\mathrm{sign}(w\cdot x + b),
-\]
-for appropriate $w,b$ determined by the Naive Bayes parameters.
 
+\[
+h_{\text{naive}}(\vec{x}) = \mathrm{sign} \left[ \ln \frac{P(Y=+1)}{P(Y=-1)} + \sum_{i=1}^N \ln \frac{P(X_i = x_i \mid Y=+1)}{P(X_i = x_i \mid Y=-1)} \right]
+\]
+This shows that the Naive Bayes classifier is a linear classifier in the feature space, i.e.,
+\[
+h(\vec{x}) = \mathrm{sign}(\vec{w} \cdot \vec{x} + b)
+\]
+where
+\[
+b = \ln \frac{P(Y=+1)}{P(Y=-1)}, \quad
+\vec{w}_i = \ln \frac{P(X_i = x_i \mid Y=+1)}{P(X_i = x_i \mid Y=-1)}
+\]
 
 \subsection{Multinomial Naive Bayes (Text)}
 For documents represented as a bag of words, assume each word is drawn i.i.d.\ from a class-specific distribution over the vocabulary.
@@ -72,23 +79,44 @@ P(x\mid y)\propto \prod_{w\in\mathcal{V}} P(w\mid y)^{c(w)},
 and classification again uses $\arg\max_y P(y)P(x\mid y)$.
 
 \subsection{Modeling Continuous Variables: Linear Discriminant Analysis (LDA)}
-Assume class-conditional Gaussians with shared covariance:
+
+Assume the feature vectors of each class come from a spherical Gaussian distribution:
 \[
-X\mid (Y=y)\sim \mathcal{N}(\mu_y,\Sigma),\qquad y\in\{+1,-1\}.
+P(X = \vec{x} \mid Y = y) = \mathcal{N}(\vec{\mu}_y, \Sigma_y)
 \]
-Then Bayes classification reduces to a linear decision boundary:
+where
 \[
-h(x)=\mathrm{sign}(w\cdot x + b),
-\quad
-w=\Sigma^{-1}(\mu_{+}-\mu_{-}),
+P(X = \vec{x} \mid Y = y) = \frac{1}{(2\pi)^{N/2} |\Sigma_y|^{1/2}} \exp\left(-\frac{1}{2} (\vec{x} - \vec{\mu}_y)^T \Sigma_y^{-1} (\vec{x} - \vec{\mu}_y)\right)
 \]
+For LDA, we assume $\Sigma_+ = \Sigma_- = \Sigma = \mathrm{diag}(1)$ (features are normalized to variance 1).
+
+\paragraph{Classification Rule}
 \[
-b=\ln\frac{P(Y=+1)}{P(Y=-1)}-\frac{1}{2}(\mu_{+}+\mu_{-})^\top\Sigma^{-1}(\mu_{+}-\mu_{-}).
+h_{\text{LDA}}(\vec{x}) = \arg\max_{y \in \mathcal{Y}} \left[ P(X = \vec{x} \mid Y = y) P(Y = y) \right]
+\]
+This simplifies to:
+\[
+h_{\text{LDA}}(\vec{x}) = \arg\max_{y \in \mathcal{Y}} \left[ \ln P(Y = y) - \frac{1}{2} \|\vec{x} - \vec{\mu}_y\|^2 \right]
+\]
+which is a linear classifier:
+\[
+h(\vec{x}) = \mathrm{sign}(\vec{w} \cdot \vec{x} + b)
+\]
+where
+\[
+\vec{w} = \vec{\mu}_+ - \vec{\mu}_-, \quad
+b = \ln \frac{P(Y=+1)}{P(Y=-1)} - \frac{1}{2} (\vec{\mu}_+ + \vec{\mu}_-) \cdot (\vec{\mu}_+ - \vec{\mu}_-)
 \]
 
 \paragraph{Parameter Estimation}
 \begin{itemize}
-    \item Priors $P(Y=y)$: class frequencies.
-    \item Means $\mu_y$: per-class sample means.
-    \item Shared covariance $\Sigma$: pooled within-class covariance estimate.
+    \item \textbf{Class priors:}
+    \[
+    \hat{P}(Y = +1) = \frac{m_+}{m}, \quad \hat{P}(Y = -1) = \frac{m_-}{m}
+    \]
+    \item \textbf{Class means:}
+    \[
+    \vec{\mu}_+ = \frac{1}{m_+} \sum_{i: y_i = +1} \vec{x}_i, \quad
+    \vec{\mu}_- = \frac{1}{m_-} \sum_{i: y_i = -1} \vec{x}_i
+    \]
 \end{itemize}
